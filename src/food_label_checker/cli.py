@@ -2,7 +2,7 @@
 
 退出码约定：0 = 审查/评测完成且达标（检出不合规项不算失败，结论看输出）；
 1 = bench 评测跑通但未达门槛（F1 / 误报 / 检出率，见 plan/05 M4 DoD）；
-2 = 用法/输入错误。
+2 = 用法/输入错误（含可选扩展依赖缺失，报错信息带安装提示）。
 Windows 控制台建议 `py -X utf8 -m food_label_checker ...`（GBK 终端见 README 已知环境问题）。
 """
 from __future__ import annotations
@@ -18,7 +18,7 @@ from .bench.e2e_eval import DEFAULT_BENCH_DATA, evaluate_e2e
 from .bench.parse_eval import PARSE_F1_GATE, evaluate_frozen, resolve_bench_data
 from .datagen import generate_dataset, write_dataset
 from .datagen.templates import resolve_categories
-from .pipeline import check_text, parse_text
+from .pipeline import parse_text, read_input, run_pipeline
 from .rules.engine import resolve_ruleset_ids
 
 
@@ -45,7 +45,12 @@ def build_parser() -> argparse.ArgumentParser:
         "--ruleset", default="both", help="规则集：2011 / 2025 / both（默认 both）"
     )
     p_check.add_argument(
-        "--format", default="json", choices=["json"], help="输出格式（table 随 M5 增加）"
+        "--format", default="json", choices=["json", "table"],
+        help="输出格式：json（默认，完整结果）/ table（人读摘要）",
+    )
+    p_check.add_argument(
+        "--report", default=None, metavar="OUT.docx",
+        help="生成 docx 审查报告到指定路径（需安装 report 扩展）",
     )
     p_check.add_argument(
         "--llm", action="store_true",
@@ -89,21 +94,65 @@ def build_parser() -> argparse.ArgumentParser:
     )
     bp_e2e.add_argument(
         "--data", default=DEFAULT_BENCH_DATA,
-        help=f"数据集目录（含 truth.json，默认 {DEFAULT_BENCH_DATA}）",
+        help="数据集目录（含 truth.json，默认 data/generated/frozen/seed-2026-n12）",
     )
 
-    sub.add_parser("web", help="启动 Web 面板（M5 实现）")
+    p_web = sub.add_parser("web", help="启动 Web 面板（FastAPI，0 外链内联单页）")
+    p_web.add_argument("--host", default="127.0.0.1", help="监听地址（默认 127.0.0.1）")
+    p_web.add_argument("--port", type=int, default=8000, help="监听端口（默认 8000）")
     return parser
 
 
-def _read_input(raw: str) -> str:
-    path = Path(raw)
-    if not path.exists():
-        raise FileNotFoundError(f"输入文件不存在：{path}")
-    try:
-        return path.read_text(encoding="utf-8-sig")
-    except UnicodeDecodeError as exc:
-        raise ValueError(f"输入文件需为 UTF-8 编码：{exc}") from exc
+def _finding_lines(finding: dict) -> list:
+    """单条结论的人读展示行（table 输出用）。"""
+    lines = []
+    marker = "✗ 不合规" if finding["level"] == "不合规" else "? 待人工确认"
+    lines.append(f"  {marker} [{finding['rule_id']}] {finding['message']}")
+    basis = finding.get("basis") or {}
+    if basis.get("standard") or basis.get("clause"):
+        lines.append(f"      依据：{basis.get('standard', '')} {basis.get('clause', '')}".rstrip())
+    if finding.get("advice"):
+        lines.append(f"      建议：{finding['advice']}")
+    evidence = finding.get("evidence") or {}
+    quote = evidence.get("quote") or ""
+    if quote:
+        shown = quote[:60] + ("…" if len(quote) > 60 else "")
+        lines.append(f"      证据（{evidence.get('region', '')}）：{shown}")
+    return lines
+
+
+def _print_check_table(result: dict) -> None:
+    """check --format table：人读摘要输出（JSON 仍是默认与机读口径）。"""
+    card = result["card"]
+    name_field = card.get("fields", {}).get("food_name") or {}
+    print("[flcheck] 食品标签合规审查")
+    print(f"  食品名称：{name_field.get('value', '（未识别）')}")
+    print(f"  规则集：{' + '.join(result['ruleset_ids'])}    引擎版本：v{result['engine_version']}")
+    for rid, res in result["results"].items():
+        stats = res["stats"]
+        print()
+        print(
+            f"■ {rid}：检查 {stats.get('checked', 0)} 项｜"
+            f"合规 {stats.get('pass', 0)}｜不合规 {stats.get('fail', 0)}｜"
+            f"待人工 {stats.get('manual', 0)}"
+        )
+        for finding in res["findings"]:
+            if finding["level"] == "合规":
+                continue
+            for line in _finding_lines(finding):
+                print(line)
+    if "dual_diff" in result:
+        dd = result["dual_diff"]
+        print()
+        print(
+            f"■ 双标尺对照（{dd['baseline']} → {dd['target']}）："
+            f"新增不合规 {dd['new_fails']}｜消除 {dd['resolved_fails']}"
+        )
+    fb = result.get("fallback") or {}
+    fb_line = f"■ LLM 兜底：{fb.get('status', 'off')}"
+    if fb.get("filled_keys"):
+        fb_line += f"（填充：{', '.join(fb['filled_keys'])}）"
+    print(fb_line)
 
 
 def main(argv=None) -> int:
@@ -117,18 +166,31 @@ def main(argv=None) -> int:
 
     try:
         if ns.command == "check":
-            text = _read_input(ns.input)
             llm_config = None
             if ns.llm:
                 from .llm.config import from_env as llm_from_env
 
                 llm_config = llm_from_env()
                 llm_config.enabled = True  # --llm 为显式开启开关
-            result = check_text(text, resolve_ruleset_ids(ns.ruleset), llm_config)
-            print(json.dumps(result, ensure_ascii=False, indent=2))
+            result = run_pipeline(
+                input_path=ns.input,
+                ruleset_ids=resolve_ruleset_ids(ns.ruleset),
+                llm_config=llm_config,
+            )
+            for warning in result.get("warnings", []):
+                print(f"[flcheck] 警告：{warning}", file=sys.stderr)
+            if ns.format == "table":
+                _print_check_table(result)
+            else:
+                print(json.dumps(result, ensure_ascii=False, indent=2))
+            if ns.report:
+                from .report.docx_report import generate_report
+
+                out_path = generate_report(result, ns.report)
+                print(f"[flcheck] docx 报告已生成：{Path(out_path).as_posix()}", file=sys.stderr)
             return 0
         if ns.command == "parse":
-            text = _read_input(ns.input)
+            text = read_input(ns.input)
             print(json.dumps(parse_text(text), ensure_ascii=False, indent=2))
             return 0
         if ns.command == "gen":
@@ -181,10 +243,27 @@ def main(argv=None) -> int:
                            "issues": issues[:50] + (["……（截断）"] if len(issues) > 50 else [])}
             print(json.dumps(payload, ensure_ascii=False, indent=2))
             return 0 if gate["passed"] else 1
+        if ns.command == "web":
+            from .webapp import create_app
+
+            try:
+                import uvicorn  # noqa: F401
+            except ImportError:
+                print(
+                    "Web 面板需要安装 web 扩展：pip install 'food-label-compliance-checker[web]'",
+                    file=sys.stderr,
+                )
+                return 2
+            uvicorn.run(create_app(), host=ns.host, port=ns.port)
+            return 0
     except FileNotFoundError as exc:
         print(f"[flcheck] {exc}", file=sys.stderr)
         return 2
     except FileExistsError as exc:
+        print(f"[flcheck] {exc}", file=sys.stderr)
+        return 2
+    except ImportError as exc:
+        # 可选扩展（report/web/llm）依赖缺失：打印安装提示，优雅退出不崩溃。
         print(f"[flcheck] {exc}", file=sys.stderr)
         return 2
     except (ValueError, json.JSONDecodeError) as exc:
@@ -192,8 +271,7 @@ def main(argv=None) -> int:
         return 2
 
     print(
-        f"[flcheck] 子命令『{ns.command}』尚未实现：Web 面板随 M5 落地，"
-        "实现里程碑见 plan/05-数据计划与里程碑.md。",
+        f"[flcheck] 子命令『{ns.command}』尚未实现：实现里程碑见 plan/05-数据计划与里程碑.md。",
         file=sys.stderr,
     )
     return 2

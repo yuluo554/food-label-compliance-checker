@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "food-label-compliance-checker"
-version = "0.5.0"
+version = "0.6.0"
 description = "预包装食品标签合规智能审查系统：GB 7718-2011/2025 双标尺规则引擎，内置可复现评测基准"
 readme = "README.md"
 requires-python = ">=3.8"

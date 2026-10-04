@@ -2,11 +2,11 @@
 
 预包装食品标签合规智能审查系统——面向 GB 7718/GB 28050 换版期（新版标准 2025-03-27 发布、2027-03-16 强制实施）的标签审查开源工具：把文本标签解析为结构化"参数卡"，用**双标尺规则引擎**分别按 GB 7718-2011（现行）与 GB 7718-2025（过渡期）审查，输出"现行合规 / 新规不合规"对照，每条结论挂标准条款出处与标签原文证据。
 
-> **项目状态：🚧 基准与 LLM 兜底（M4）**。垂直切片、**合成标签生成器**（固定 seed 位级复现 + V1–V8 违规注入真值）、**全量文本解析**（参数卡全字段 + 逐字证据）、**全量双标尺规则引擎**（47 条规则挂官方原文、11 种检查类型、数值复算）、**内置评测基准**（`flcheck bench`，解析 F1=1.0 / 误报 0）与 **LLM 兜底适配器**（默认关闭，quote 逐字校验防幻觉）已真实可跑；条文块知识库（四部标准 428 块）已入库挂出处。报告/Web（M5）按 [plan/05](plan/05-数据计划与里程碑.md) 里程碑推进。规划中的能力见下文"特性"，**请勿将未标注"已实现"的内容当作可用功能**。
+> **项目状态：🚧 脱敏发布准备（M6）**。垂直切片、**合成标签生成器**（固定 seed 位级复现 + V1–V8 违规注入真值）、**全量文本解析**（参数卡全字段 + 逐字证据）、**全量双标尺规则引擎**（47 条规则挂官方原文、11 种检查类型、数值复算）、**内置评测基准**（`flcheck bench`，解析 F1=1.0 / 误报 0）、**LLM 兜底适配器**（默认关闭，quote 逐字校验防幻觉）与**交付形态**（pipeline 状态机 / docx 审查报告 / Web 面板）已真实可跑；条文块知识库（四部标准 428 块）已入库挂出处。发布（M6）按 [plan/05](plan/05-数据计划与里程碑.md) 里程碑推进。规划中的能力见下文"特性"，**请勿将未标注"已实现"的内容当作可用功能**。
 
 ## 特性
 
-**已实现（M0 骨架 → M1 数据先行 → M2 解析层 → M3 知识与规则 → M4 基准与 LLM 兜底）**
+**已实现（M0 骨架 → M1 数据先行 → M2 解析层 → M3 知识与规则 → M4 基准与 LLM 兜底 → M5 编排与交付）**
 
 - 标签参数卡统一中间表示（字段-值-单位-置信度-证据），证据含标签区域+原文逐字摘录+字符偏移；全 P0 字段解析（配料表、三列制表符营养成分表行级证据、双日期、SC 号、声称、盐油糖提示语与致敏物质提示在位性等），非规范日期也解析出 ISO 值不误报
 - **双标尺规则引擎（47 条规则）**：`gb7718-2011`（21 条）与 `gb7718-2025`（26 条，含保质期到期日、盐油糖提示语、"不添加"类受限声称、强制营养行完整性、致敏物质提示等 2025 新增）跑同一标签，输出 `dual_diff`（新增/消除的不合规项）
@@ -18,11 +18,13 @@
 - 类目隔离门控（`only_if`，对全部检查类型生效）+ conditional 豁免分支（食醋/食用盐/味精/固态食糖豁免保质期与到期日标示，酒类转人工核验度数）
 - 结论三级判定（合规 / 不合规 / 待人工确认），每条挂标准号+条款号+条文块出处；"待核对"规则自动标"依据待核对"；标示行存在但解析失败的情形转"待人工确认"而非误判不合规
 - **合成标签生成器**（`flcheck gen`）：4 品类 8 模板，固定 seed 位级复现（DATAGEN_VERSION=2：全模板含 7 项营养行与致敏物质提示行），注入 V1–V8 已知违规并自动落真值 JSON（主期望+also_expect 语义）；冻结 fixtures 小集入仓 + 守门测试；冻结集 12 样本双标尺全量对账回归（干净样本零不合规、注入样本精确命中）
-- CLI（`flcheck check / parse / gen / bench`）、CI（{ubuntu, windows} × {3.8, 3.11}）、全离线 pytest（159 项）
+- **pipeline 状态机（M5）**：`load_input → parse → llm 兜底（可选）→ run_ruleset×N → merge+diff → emit`，每节点记录耗时与状态（`pipeline.nodes`），降级节点汇入 `warnings`；输入类失败明确报错退出（退出码 2），规则类失败降级为该规则集结果缺失+警告，不吞异常
+- **docx 审查报告（M5，`report/`，`.[report]` extra）**：结论摘要 → 问题清单（分级）→ 待人工确认（独立成节）→ 证据表 → 整改建议 → 审查员签署栏 → 免责声明；LLM 参与标注（`card.llm_assisted`）写入报告；rels 零外部链接（`check --report out.docx`）
+- **Web 面板（M5，`webapp/`，`.[web]` extra）**：FastAPI + 零依赖内联单页（vanilla JS，无构建/无 vendor），页面 0 外链断网可演示，`docs_url/redoc_url` 显式关闭；`flcheck web` 一条命令起服务，multipart 上传或粘贴文本 → 完整审查 JSON
+- CLI（`flcheck check / parse / gen / bench / web`，`check --format json|table`、`--report out.docx`）、CI（{ubuntu, windows} × {3.8, 3.11}）、全离线 pytest（189 项，extras 覆盖守门：pyproject 可选依赖必须覆盖运行期+测试期 import）
 
 **规划中（按里程碑）**
 
-- M5 docx 审查报告 + Web 面板（免构建、0 外链断网可演示）+ pipeline 状态机
 - M6 脱敏发布 GitHub + 收尾固化（tag/release/topics）
 
 ## 架构
@@ -36,8 +38,8 @@ flowchart LR
     R2[gb7718-2025] --> D
     D --> E[双标尺对照 dual_diff\n三级判定+条款出处]
     E --> F1[CLI flcheck]
-    E --> F2[docx 报告 M5]
-    E --> F3[Web 面板 M5]
+    E --> F2[docx 报告]
+    E --> F3[Web 面板]
 ```
 
 核心通路（解析→参数卡→规则→判定）纯标准库实现，基准评测零 API 依赖可复现；web/report/llm 走可选依赖（extras）。
@@ -76,13 +78,26 @@ flcheck check examples/sample_label.txt --ruleset both
 
 | 命令 | 状态 | 说明 |
 |---|---|---|
-| `flcheck check <file> --ruleset 2011\|2025\|both` | ✅ | 解析+审查，JSON 输出（退出码：0 审查完成 / 2 输入错误）；`--llm` 启用 LLM 兜底（默认关闭） |
+| `flcheck check <file> --ruleset 2011\|2025\|both` | ✅ | 解析+审查，JSON 输出（退出码：0 审查完成 / 2 输入错误）；`--llm` 启用 LLM 兜底（默认关闭）；`--format table` 人读摘要输出 |
+| `flcheck check <file> --report out.docx` | ✅ | 审查后生成 docx 报告（需 `.[report]`；stdout 保持 JSON，缺依赖时退出码 2 并提示安装） |
 | `flcheck parse <file>` | ✅ | 仅解析为标签参数卡 JSON |
 | `flcheck gen --seed 42` | ✅ | 合成标签生成器：`--n`（默认 12：4 品类各 1 干净版 + V1–V8 各 1）/ `--categories` / `--out` / `--force`，输出标签文本 + truth.json + manifest.json（含 sha256） |
 | `flcheck bench parse` / `flcheck bench e2e` | ✅ | 内置基准评测（零 API 依赖；退出码：0 达标 / 1 未达门槛 / 2 输入错误），`--data` 可指定数据集目录 |
-| `flcheck web` | ⬜ M5 | Web 面板（0 外链） |
+| `flcheck web --host 127.0.0.1 --port 8000` | ✅ | 启动 Web 面板（需 `.[web]`；0 外链内联单页，断网可演示） |
 
-可选依赖：`pip install -e ".[web]"`（Web 面板）、`.[report]`（docx 报告）、`.[llm]`（LLM 兜底，默认关闭）、`.[dev]`（pytest）。
+可选依赖：`pip install -e ".[web]"`（Web 面板）、`.[report]`（docx 报告）、`.[llm]`（LLM 兜底，默认关闭）、`.[dev]`（pytest）。缺依赖时相关命令优雅降级（退出码 2 + 安装提示），核心 CLI 不受影响。
+
+## Web 面板与 docx 报告（M5）
+
+```bash
+pip install -e ".[web,report]"        # 可选依赖
+
+flcheck web --port 8000               # 浏览器打开 http://127.0.0.1:8000（页面 0 外链，断网可演示）
+flcheck check examples/sample_label.txt --report data/demo_report.docx   # 生成 docx 审查报告
+```
+
+- Web 面板：上传标签文本文件（multipart）或直接粘贴 → 返回完整审查 JSON 并渲染（统计、分级结论、双标尺对照、流水线节点耗时）；`/docs`、`/redoc` 已显式关闭（Swagger UI 引外部 CDN），页面无任何 http(s) 引用（守门测试硬断言）；
+- docx 报告结构：结论摘要 → 问题清单（分级）→ **待人工确认（独立成节）** → 证据表 → 整改建议 → 审查员签署栏 → 免责声明；报告零外部链接（rels 无 External），LLM 参与时在元信息与免责声明中标注。
 
 ## LLM 兜底（默认关闭）
 
@@ -138,7 +153,8 @@ flcheck bench parse && flcheck bench e2e
 ├── src/food_label_checker/    # 源码（src 布局）
 │   ├── parser/                # 文本标签 → 参数卡
 │   ├── rules/                 # 规则引擎 + rulesets/*.json（随包分发）
-│   ├── numeric/  datagen/  llm/  report/  webapp/   # 按里程碑实现
+│   ├── numeric/  datagen/  llm/      # 数值复算 / 合成数据生成器 / LLM 兜底
+│   ├── report/  webapp/              # docx 报告 / Web 面板（extras）
 │   └── cli.py  pipeline.py  models.py
 ├── tests/                     # 全离线 pytest（含失败路径）
 └── examples/                  # 演示标签
