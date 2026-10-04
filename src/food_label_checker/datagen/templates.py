@@ -247,6 +247,15 @@ def initial_state(t: Template, production_date: date) -> LabelState:
     )
 
 
+def fmt_cn_date(dt: date) -> str:
+    """ISO 日期 → `YYYY年MM月DD日`。
+
+    手工格式化而非 strftime：Windows 的 strftime 按 locale（ANSI 代码页）编码格式串，
+    非 ASCII 字面量在非中文代码页（如 CI 的 cp1252）直接 UnicodeEncodeError。
+    """
+    return "%04d年%02d月%02d日" % (dt.year, dt.month, dt.day)
+
+
 def render_label(state: LabelState) -> str:
     t = state.template
     d = state.deleted
@@ -259,12 +268,12 @@ def render_label(state: LabelState) -> str:
     if "net_content" not in d:
         lines.append(f"净含量：{fmt_amount(t.net_amount)}{t.net_unit}")
     if "production_date" not in d:
-        shown = state.nonstandard_date or state.production_date.strftime("%Y年%m月%d日")
+        shown = state.nonstandard_date or fmt_cn_date(state.production_date)
         lines.append(f"生产日期：{shown}")
     if "shelf_life" not in d:
         lines.append(f"保质期：{t.shelf_value}{t.shelf_unit}")
     shown_expiry = state.shown_expiry_date or state.expiry_date
-    lines.append(f"保质期到期日：{shown_expiry.strftime('%Y年%m月%d日')}")
+    lines.append(f"保质期到期日：{fmt_cn_date(shown_expiry)}")
     if "storage_conditions" not in d:
         lines.append(f"贮存条件：{t.storage}")
     lines.append(f"生产商：{t.producer}（虚构演示数据）")

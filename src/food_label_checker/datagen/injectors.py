@@ -12,7 +12,7 @@ from datetime import date
 from typing import Any, Dict, List
 
 from .nutrients import nrv_value
-from .templates import LabelState
+from .templates import LabelState, fmt_cn_date
 
 # V1 可删字段池：字段键 → (强制标示规则契约 id, 标签用语)。M3 规则库必须包含这些 MAND-* id。
 DELETABLE_FIELDS: Dict[str, Dict[str, str]] = {
@@ -217,7 +217,7 @@ def _inject_v7(state: LabelState, rng) -> Dict[str, Any]:
         return _entry(
             "V7",
             "FMT-DATE-01",
-            {"variant": "format", "shown": shown, "correct": d.strftime("%Y年%m月%d日")},
+            {"variant": "format", "shown": shown, "correct": fmt_cn_date(d)},
             [],
         )
     shift = V7B_SHIFTS[rng.randrange(len(V7B_SHIFTS))]
@@ -228,8 +228,8 @@ def _inject_v7(state: LabelState, rng) -> Dict[str, Any]:
         "DATE-LOGIC-01",
         {
             "variant": "logic",
-            "shown_expiry": shown.strftime("%Y年%m月%d日"),
-            "correct_expiry": state.expiry_date.strftime("%Y年%m月%d日"),
+            "shown_expiry": fmt_cn_date(shown),
+            "correct_expiry": fmt_cn_date(state.expiry_date),
             "shift_days": shift,
         },
         [],
