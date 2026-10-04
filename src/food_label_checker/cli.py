@@ -1,6 +1,8 @@
 """flcheck 命令行入口。
 
-退出码约定：0 = 审查完成（含检出不合规项，结论看输出）；2 = 用法/输入错误。
+退出码约定：0 = 审查/评测完成且达标（检出不合规项不算失败，结论看输出）；
+1 = bench 评测跑通但未达门槛（F1 / 误报 / 检出率，见 plan/05 M4 DoD）；
+2 = 用法/输入错误。
 Windows 控制台建议 `py -X utf8 -m food_label_checker ...`（GBK 终端见 README 已知环境问题）。
 """
 from __future__ import annotations
@@ -12,6 +14,8 @@ import sys
 from pathlib import Path
 
 from . import __version__
+from .bench.e2e_eval import DEFAULT_BENCH_DATA, evaluate_e2e
+from .bench.parse_eval import PARSE_F1_GATE, evaluate_frozen, resolve_bench_data
 from .datagen import generate_dataset, write_dataset
 from .datagen.templates import resolve_categories
 from .pipeline import check_text, parse_text
@@ -43,6 +47,11 @@ def build_parser() -> argparse.ArgumentParser:
     p_check.add_argument(
         "--format", default="json", choices=["json"], help="输出格式（table 随 M5 增加）"
     )
+    p_check.add_argument(
+        "--llm", action="store_true",
+        help="启用 LLM 兜底（配置读 FOOD_LABEL_LLM_* 环境变量/.env，默认关闭；"
+             "不可达/超时自动降级到规则通路）",
+    )
 
     p_parse = sub.add_parser("parse", help="仅解析为标签参数卡 JSON")
     p_parse.add_argument("input", help="标签文本文件路径（UTF-8）")
@@ -60,7 +69,29 @@ def build_parser() -> argparse.ArgumentParser:
         "--force", action="store_true", help="目标目录已存在时删除重生成（缺省报错退出，保护已冻结数据）"
     )
 
-    sub.add_parser("bench", help="内置基准评测（M4 实现）")
+    p_bench = sub.add_parser(
+        "bench",
+        help="内置基准评测（零 API 依赖；退出码 0 达标 / 1 未达标）",
+    )
+    bench_sub = p_bench.add_subparsers(dest="bench_kind")
+    bp_parse = bench_sub.add_parser(
+        "parse", help=f"解析 F1 基准（门槛 F1 ≥ {PARSE_F1_GATE}）"
+    )
+    bp_parse.add_argument(
+        "--data", default=DEFAULT_BENCH_DATA,
+        help=f"数据集目录（含 truth.json，默认 {DEFAULT_BENCH_DATA}）",
+    )
+    bp_parse.add_argument(
+        "--min-f1", type=float, default=PARSE_F1_GATE, help="F1 合格线（默认 0.95）"
+    )
+    bp_e2e = bench_sub.add_parser(
+        "e2e", help="端到端对账基准（合格线：误报 0 / 检出率 1.0 / dual_diff 零违例）"
+    )
+    bp_e2e.add_argument(
+        "--data", default=DEFAULT_BENCH_DATA,
+        help=f"数据集目录（含 truth.json，默认 {DEFAULT_BENCH_DATA}）",
+    )
+
     sub.add_parser("web", help="启动 Web 面板（M5 实现）")
     return parser
 
@@ -87,7 +118,13 @@ def main(argv=None) -> int:
     try:
         if ns.command == "check":
             text = _read_input(ns.input)
-            result = check_text(text, resolve_ruleset_ids(ns.ruleset))
+            llm_config = None
+            if ns.llm:
+                from .llm.config import from_env as llm_from_env
+
+                llm_config = llm_from_env()
+                llm_config.enabled = True  # --llm 为显式开启开关
+            result = check_text(text, resolve_ruleset_ids(ns.ruleset), llm_config)
             print(json.dumps(result, ensure_ascii=False, indent=2))
             return 0
         if ns.command == "parse":
@@ -111,6 +148,39 @@ def main(argv=None) -> int:
                 "位级复现校验见 manifest.json 与 tests/test_datagen_repro.py）"
             )
             return 0
+        if ns.command == "bench":
+            if ns.bench_kind is None:
+                print(
+                    "[flcheck] bench 需要子命令：parse（解析 F1）/ e2e（端到端对账），"
+                    "详见 `flcheck bench --help`。",
+                    file=sys.stderr,
+                )
+                return 2
+            if ns.bench_kind == "parse":
+                data_dir = resolve_bench_data(ns.data)
+                metrics, issues = evaluate_frozen(data_dir=data_dir)
+                gate = {"metric": "f1", "threshold": ns.min_f1,
+                        "passed": metrics["f1"] >= ns.min_f1}
+                payload = {"bench": "parse", "data": data_dir.as_posix(),
+                           "metrics": metrics, "gate": gate,
+                           "issues": issues[:50] + (["……（截断）"] if len(issues) > 50 else [])}
+            else:  # e2e
+                data_dir = resolve_bench_data(ns.data)
+                metrics, issues = evaluate_e2e(data_dir=data_dir)
+                gate = {
+                    "thresholds": {"false_positives": 0, "detection_rate": 1.0,
+                                   "dual_diff_violations": 0},
+                    "passed": (
+                        metrics["false_positives"] == 0
+                        and metrics["detection_rate"] == 1.0
+                        and not metrics["dual_diff_violations"]
+                    ),
+                }
+                payload = {"bench": "e2e", "data": Path(ns.data).as_posix(),
+                           "metrics": metrics, "gate": gate,
+                           "issues": issues[:50] + (["……（截断）"] if len(issues) > 50 else [])}
+            print(json.dumps(payload, ensure_ascii=False, indent=2))
+            return 0 if gate["passed"] else 1
     except FileNotFoundError as exc:
         print(f"[flcheck] {exc}", file=sys.stderr)
         return 2
@@ -122,7 +192,7 @@ def main(argv=None) -> int:
         return 2
 
     print(
-        f"[flcheck] 子命令『{ns.command}』尚未实现：当前为 M0 骨架阶段，"
+        f"[flcheck] 子命令『{ns.command}』尚未实现：Web 面板随 M5 落地，"
         "实现里程碑见 plan/05-数据计划与里程碑.md。",
         file=sys.stderr,
     )

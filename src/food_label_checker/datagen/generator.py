@@ -25,7 +25,7 @@ from .templates import (
     render_label,
 )
 
-DATAGEN_VERSION = "1"
+DATAGEN_VERSION = "2"  # v2（M4）：模板补糖行（灭菌乳/食醋 0g）+ 全模板致敏物质提示行；详见 datagen/__init__.py §6
 TRUTH_SEMANTICS_NOTE = "主期望+also_expect 语义与对账口径见 datagen/__init__.py 模块注释（M1 定稿）"
 
 

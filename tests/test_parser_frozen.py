@@ -12,21 +12,23 @@ from pathlib import Path
 
 import pytest
 
-from food_label_checker.parser import parse_label
-
-from parse_f1 import (
-    FROZEN_DIR,
+from food_label_checker.bench.parse_eval import (
     build_expected,
     evaluate_frozen,
     load_frozen_dataset,
     num_eq,
+    resolve_bench_data,
     value_eq,
 )
+from food_label_checker.parser import parse_label
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+FROZEN_DIR = REPO_ROOT / "data" / "generated" / "frozen" / "seed-2026-n12"
 
 
 @pytest.fixture(scope="module")
 def frozen_dataset():
-    return load_frozen_dataset()
+    return load_frozen_dataset(FROZEN_DIR)
 
 
 def _parse_frozen(sample) -> tuple:
@@ -100,6 +102,7 @@ def test_all_p0_fields_have_evidence(frozen_dataset):
         "food_name", "ingredients", "net_content", "production_date", "shelf_life",
         "expiry_date", "storage_conditions", "producer_name", "producer_address",
         "producer_contact", "sc_license", "product_standard", "salt_oil_sugar_notice",
+        "allergen_notice",
     }
     seen_keys = set()
     for sample in truth["samples"]:
@@ -130,8 +133,8 @@ def test_v7a_nonstandard_date_parsed_not_missing(frozen_dataset):
 
 
 def test_parse_f1_frozen_at_least_090():
-    """解析 F1 自测（plan/05 M2 DoD：冻结集 ≥0.9）。"""
-    metrics, issues = evaluate_frozen()
+    """解析 F1 自测（plan/05 M2 DoD：冻结集 ≥0.9；M4 全量口径门槛 0.95 见 bench）。"""
+    metrics, issues = evaluate_frozen(data_dir=FROZEN_DIR)
     print("解析 F1 自测指标：", json.dumps(metrics, ensure_ascii=False))
     if issues:
         print("对账问题（前 10 条）：")

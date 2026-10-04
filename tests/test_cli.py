@@ -67,6 +67,12 @@ def test_unknown_ruleset_exit_2(sample_text, tmp_path, capsys):
     assert "未知规则集" in capsys.readouterr().err
 
 
-def test_unimplemented_subcommand_exit_2(capsys):
+def test_bench_requires_subcommand_exit_2(capsys):
+    """M4：bench 已实现，裸命令提示需要子命令（parse/e2e）。"""
     assert main(["bench"]) == 2
+    assert "需要子命令" in capsys.readouterr().err
+
+
+def test_unimplemented_subcommand_exit_2(capsys):
+    assert main(["web"]) == 2
     assert "尚未实现" in capsys.readouterr().err

@@ -10,9 +10,9 @@
 | data/knowledge/raw/*.pdf | 四部标准官方原文 PDF（GB 7718-2011/2025、GB 28050-2011/2025） | 食品安全国家标准数据检索平台 sppt.cfsa.net.cn（官方直下，渠道/校验值见 raw/retrieval-log.md） | 标准文本版权归发布机构，仅供学习研究 | ✅ 2026-10-04（M1） |
 | data/knowledge/raw/retrieval-log.md | 检索过程与校验记录 | 自制 | 本仓库 MIT | ✅ 2026-10-04（M1） |
 | data/knowledge/blocks/ | 条文块（块号+条款号+原文+出处，4 部标准 428 块，`tools/build_blocks.py` 切分） | 自制（从 raw 切分） | 本仓库 MIT（所含标准原文版权归发布机构，仅供学习研究） | ✅ 2026-10-04（M3）；守门测试 tests/test_blocks.py |
-| data/knowledge/rules/ | 规则来源台账 | 自制 | 本仓库 MIT | ✅ 2026-10-04（M3）；规则集本体在包内 rules/rulesets/（45 条全部挂条文块 quote_ref） |
+| data/knowledge/rules/ | 规则来源台账 | 自制 | 本仓库 MIT | ✅ 2026-10-04（M3，M4 增补）；规则集本体在包内 rules/rulesets/（47 条全部挂条文块 quote_ref） |
 | src/food_label_checker/rules/nutrient_reference.json | NRV 基准值/能量系数/声称阈值参数表（规则引用不复制） | 已对照官方原文逐项核对（GB 28050-2011 附录A/§6.4 表2；GB 28050-2025 §2.3/§4/表C.1/附录D） | 本仓库 MIT（数值事实挂出处） | ✅ 2026-10-04 核心条目已核对（M1） |
-| data/generated/frozen/ | 冻结 fixtures 小集（seed 2026、n 12：4 品类各 1 干净版 + V1–V8 各 1 注入版，含 truth.json/manifest.json） | datagen 程序化自制（品牌虚构） | 本仓库 MIT | ✅ 2026-10-04（M1）；位级复现由 tests/test_datagen_repro.py 守门 |
+| data/generated/frozen/ | 冻结 fixtures 小集（seed 2026、n 12：4 品类各 1 干净版 + V1–V8 各 1 注入版，含 truth.json/manifest.json；DATAGEN_VERSION=2，M4 起全模板含 7 项营养行与致敏物质提示行） | datagen 程序化自制（品牌虚构） | 本仓库 MIT | ✅ 2026-10-04（M1 建，M4 重生成 v2）；位级复现由 tests/test_datagen_repro.py 守门 |
 | data/generated/seed-*/ | 生成器批量产物（不入仓，.gitignore） | datagen 程序化自制 | 本仓库 MIT | ✅ 策略落位（M1：基准小集入仓，大批量按需生成） |
 
 ## 标准依据查证记录（更新于 M1，2026-10-04）

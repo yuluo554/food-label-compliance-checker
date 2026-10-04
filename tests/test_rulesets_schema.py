@@ -20,6 +20,8 @@ KNOWN_CHECK_TYPES = {
     "claim_whitelist",
     "date_logic",
     "conditional",
+    "nutrition_rows",
+    "allergen_notice",
 }
 LEGAL_BASIS_STATUS = {"已核对", "待核对"}
 
@@ -93,3 +95,21 @@ def test_only_if_gate_vocabulary_documented():
             if rule["check_type"] == "conditional":
                 params = rule.get("params", {})
                 assert "exempt_if_any" in params and "manual_if_any" in params, rule["id"]
+            if rule["check_type"] == "nutrition_rows":
+                rows = rule.get("params", {}).get("required_rows")
+                assert rows and len(rows) == 7 and "糖" in rows, rule["id"]
+            if rule["check_type"] == "allergen_notice":
+                kws = rule.get("params", {}).get("allergen_keywords")
+                assert kws and "乳" in kws and "小麦" in kws, rule["id"]
+
+
+def test_m4_new_rules_are_2025_only_and_basis_verified():
+    """M4 新规则（D22）：NUTR-ROWS-01 / ALLERGEN-01 仅 2025，且依据已核对。"""
+    for rid in AVAILABLE_RULESETS:
+        ids = {r["id"] for r in json.loads(
+            (RULESETS_DIR / f"{rid}.json").read_text(encoding="utf-8"))["rules"]}
+        if rid == "gb7718-2025":
+            assert {"NUTR-ROWS-01", "ALLERGEN-01"} <= ids
+        else:
+            # 2011：糖行/饱和脂肪/致敏物质提示在 2011 语义下属自愿或推荐标示
+            assert not (ids & {"NUTR-ROWS-01", "ALLERGEN-01"})

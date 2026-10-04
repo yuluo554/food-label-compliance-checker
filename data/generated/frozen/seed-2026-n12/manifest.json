@@ -1,5 +1,5 @@
 {
-  "generator_version": "1",
+  "generator_version": "2",
   "seed": 2026,
   "n": 12,
   "categories": [
@@ -9,19 +9,19 @@
     "调味品"
   ],
   "files": {
-    "sample-0001-dairy-fermented.txt": "97f5be210a0d234c6e50c61fbbbabc04f51f81eba577697afcbad06abaeb8ce0",
-    "sample-0002-beverage-juice.txt": "3e19a52bb6ab7df83823ee5ce988a12cc06a8e90503016fbe864a7a992bce287",
-    "sample-0003-bakery-bread.txt": "26410afc389fa4eed51ab02093a42505977035f51bbb8cfb223d07a8055dd186",
-    "sample-0004-condiment-soy-sauce.txt": "6bb220d9d9f2ebbf785967dd6327264ac9904d4e3e277b5b7247c1267565dd4b",
-    "sample-0005-dairy-fermented.txt": "db75af258d8c4509ad2c242d3cd4dc3b5c590a6f9e0ba46b9cc7649a3a3dcd1d",
-    "sample-0006-beverage-tea.txt": "1690988ff20d16efef616596384d1e543b76293c40f0397a1eaef921c5583a69",
-    "sample-0007-bakery-bread.txt": "e4be7581a95f3f1883b14365ddf3d0b8ba5d169d20ee518b0eeed8e7540d6a20",
-    "sample-0008-condiment-soy-sauce.txt": "24c0761484c609f46a1ef43f2d0ffb19f55e536d9bd3107cab662d6d7d44b4cb",
-    "sample-0009-dairy-fermented.txt": "2fe81645ff548834b4904a6378145b384f700343b1affbee82e19dada5cec060",
-    "sample-0010-beverage-juice.txt": "c6cd8e7da30b720afc8b061e68ef819ab66b9ec5eb1324c3075e60442fccdbd8",
-    "sample-0011-bakery-biscuit.txt": "1cc4f569b4647563aca1d097aa999a7e0ba6d79a0592a7474b3c8989a85464df",
-    "sample-0012-condiment-vinegar.txt": "2792b25f4e940856f80f734d7f608a6d03d693c3df1625e2cdd1b8e3ac61c868",
-    "truth.json": "47aa095b2384f0ddd7585b6d0d9fb7083c513aa2ff5431d8f3c47f169a97be26"
+    "sample-0001-dairy-fermented.txt": "0ebde642bbd9af4f834795e3104008cfd8d2a5214d78453d54846cc27ddaecde",
+    "sample-0002-beverage-juice.txt": "c34d7f5c18cf09449b169b192ecac04cdcd017c47692b4d268779407f479a0ab",
+    "sample-0003-bakery-bread.txt": "4e8b3d8e37188a54254cc4d8bd52b628b86531e6361a3d44c95c7994d18b7bb1",
+    "sample-0004-condiment-soy-sauce.txt": "5330ee5d6a6484f33187d6b26811391d1759809e6ddd2e984b44d5d417f8789a",
+    "sample-0005-dairy-fermented.txt": "2cce20bcf2b653bbb4eadf2590ad898e5932de4bcfdcf29cd208094065384dfb",
+    "sample-0006-beverage-tea.txt": "d28ce06f9a32efd83acd84d4cb14a378ff568f5ee2d3f51addd22588084c94bc",
+    "sample-0007-bakery-bread.txt": "4204fa45f6f75441449f531299d0f0a406e48d8e57285a54d24ec6e8721e51a0",
+    "sample-0008-condiment-soy-sauce.txt": "8253653a26f6144f80bde2289360decde782096ae2c833513f0984c3b7a6a7cd",
+    "sample-0009-dairy-fermented.txt": "1613c7c21cb6fd22417702fc3176d20bb3309897274d12717b5c1f2030e04374",
+    "sample-0010-beverage-juice.txt": "3e8c671bab8ea3e0a18114df18e7a6eca5068a975de8663efc631ae3474154bd",
+    "sample-0011-bakery-biscuit.txt": "28bd3fc0261cfc4ce6bc8088549ab3cb22da0b586de8709db7aaf1b5bb3abe8a",
+    "sample-0012-condiment-vinegar.txt": "2eab97b9c408279d0006f6798f03ff07208260c4eca3bfb0d3f2156b6e7fc775",
+    "truth.json": "594d7c596442017e38e6ae4f971cf67cae3a36ef751727c55c2a3c6da7370be5"
   },
   "repro": "flcheck gen --seed 2026 --n 12（--force 覆盖重生成；位级一致由 tests/test_datagen_repro.py 守门）"
 }

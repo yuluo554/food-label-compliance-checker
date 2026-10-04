@@ -4,7 +4,8 @@
 net_content / production_date / shelf_life / expiry_date / storage_conditions /
 生产者三项（producer_name/producer_address/producer_contact）/ sc_license /
 product_standard / nutrition_table / claims；增补 salt_oil_sugar_notice
-（2025 版 §4.5 强制提示语的在位性，供 M3 规则门控）。
+（2025 版 §4.5 强制提示语的在位性）与 allergen_notice（GB 7718-2025 §4.12
+致敏物质提示的在位性，M4/DATAGEN_VERSION=2 起）供规则层门控。
 
 解析契约（与 datagen/__init__.py §6 语料格式约定对齐，M2 定稿见 plan/06 D19）：
 - 行式解析：``键：值``（全角/半角冒号均可，别名见 _LINE_FIELDS），配料按
@@ -107,7 +108,8 @@ _MANDATORY_KEYS = (
     "sc_license",
 )
 
-# 值解析失败的 unresolved 提示（行在但结构化失败）
+# 值解析失败的 unresolved 提示（行在但结构化失败）；同时记入
+# unresolved_detail[key]="present_unparsed"（机器可读，规则层转"待人工确认"）
 _VALUE_PARSE_FAILURE = {
     "net_content": "净含量：标示行存在但未能解析出『数值+单位』",
     "production_date": "生产日期：标示行存在但无法解析出日期值",
@@ -115,12 +117,16 @@ _VALUE_PARSE_FAILURE = {
     "shelf_life": "保质期：标示行存在但未能解析出『数值+单位』",
 }
 
-# 非 P0 但已知语义的行前缀 → unresolved 提示（喂给后续里程碑，不静默丢弃）
-_NON_P0_PREFIXES = ("致敏", "质量等级")
+# 非 P0 但已知语义的行前缀 → unresolved 提示（喂给后续里程碑，不静默丢弃）。
+# 致敏物质提示自 M4（DATAGEN_VERSION=2）起为正式解析字段，已移出本清单。
+_NON_P0_PREFIXES = ("质量等级",)
 
 _TABLE_TITLE_RE = re.compile(r"^营养成分表")
 _SALT_NOTICE_RE = re.compile(r"儿童青少年应避免过量摄入盐油糖。?")
 _CLAIM_RE = re.compile(r"^\s*声称\s*[：:]\s*(?P<rest>.+?)\s*$")
+# 致敏物质提示行（GB 7718-2025 §4.12，M4 起解析为 allergen_notice 字段）。
+# 引导词取 D.2.2 所列形态的字面子集：致敏物质(提示)/致敏原(提示)，须带冒号。
+_ALLERGEN_RE = re.compile(r"^\s*(?P<q>致敏(?:物质|原)?(?:提示|信息)?\s*[：:].+?)\s*$")
 
 _NET_RE = re.compile(
     r"^\s*(?P<amount>\d+(?:\.\d+)?)\s*"
@@ -350,6 +356,7 @@ def parse_label(text: str) -> LabelCard:
             fld = _build_field(key, line, start, m)
             if fld is not None:
                 card.fields[key] = fld
+                card.unresolved_detail.pop(key, None)  # 后续行重试成功则撤销标记
                 if key == "ingredients":  # 顶层镜像（引擎门控/规则便利访问）
                     card.ingredients = list(fld.value)
             elif key not in noted_failed:  # 失败行记一次提示，后续行仍可重试
@@ -359,6 +366,7 @@ def parse_label(text: str) -> LabelCard:
                         key, f"{_FIELD_LABEL[key]}：标示行存在但未能解析出结构化值"
                     )
                 )
+                card.unresolved_detail[key] = "present_unparsed"
             continue
 
         cm = _CLAIM_RE.match(line)
@@ -383,6 +391,20 @@ def parse_label(text: str) -> LabelCard:
                     region="营养成分表",
                     quote=nm.group(),
                     span=(start + nm.start(), start + nm.end()),
+                ),
+            )
+            continue
+
+        am = _ALLERGEN_RE.match(line)
+        if am and "allergen_notice" not in card.fields:
+            quote = am.group("q")
+            card.fields["allergen_notice"] = LabelField(
+                key="allergen_notice",
+                value=True,
+                evidence=Evidence(
+                    region="致敏物质提示",
+                    quote=quote,
+                    span=(start + am.start("q"), start + am.end("q")),
                 ),
             )
             continue

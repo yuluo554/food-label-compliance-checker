@@ -1,4 +1,4 @@
-"""解析层评测助手（M2 自测口径；M4 bench parse 全量口径在此基础上定稿）。
+"""解析层评测器（M4 自 tests/parse_f1.py 迁入定稿；plan/04 §6 bench parse）。
 
 真值只能来自生成器：参数卡期望值由 generate_dataset_with_states 返回的
 LabelState 重建（build_expected 与 render_label 的渲染约定一一对应）。期望值
@@ -6,11 +6,11 @@ LabelState 重建（build_expected 与 render_label 的渲染约定一一对应�
 fixtures 的位级一致性由 tests/test_datagen_repro.py 守门；解析输入一律读
 冻结文件本身（只读，勿重生成，决策 D18）。
 
-对账口径（M2 自测版）：
+对账口径（字段实例计量）：
 - 计量单位为「字段实例」：标量字段 1 个、营养行按行名 1 个、声称按条 1 个；
 - TP=解析存在且值相等；FN=期望有而解析缺失；值不等记 FN+FP 各 1；
 - 期望全集之外的解析键/营养行/声称记 FP；V1 删除字段若被解析出值同样落 FP；
-- F1 = 2TP / (2TP + FP + FN)，DoD 门槛 ≥0.9（M4 全量口径定稿）。
+- F1 = 2TP / (2TP + FP + FN)，M4 全量门槛 F1 ≥ 0.95（plan/05 M4 DoD）。
 """
 from __future__ import annotations
 
@@ -21,8 +21,21 @@ from typing import Any, Callable, Dict, List, Tuple
 from food_label_checker.datagen import generate_dataset_with_states
 from food_label_checker.parser import parse_label
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-FROZEN_DIR = REPO_ROOT / "data" / "generated" / "frozen" / "seed-2026-n12"
+# M4 DoD 门槛：全量冻结集解析 F1 ≥ 0.95（flcheck bench parse 默认门槛）
+PARSE_F1_GATE = 0.95
+
+DEFAULT_BENCH_DATA = "data/generated/frozen/seed-2026-n12"
+
+
+def resolve_bench_data(data_dir: Any = None) -> Path:
+    """定位基准数据集目录：显式参数 > cwd 相对默认路径。缺真值即报错。"""
+    path = Path(data_dir) if data_dir else Path(DEFAULT_BENCH_DATA)
+    if not (path / "truth.json").exists():
+        raise FileNotFoundError(
+            f"基准数据集不存在：{path}（需含 truth.json）。"
+            f"请在仓库根目录运行，或用 --data 指定 flcheck gen 的输出目录。"
+        )
+    return path
 
 
 def num_eq(parsed: Any, expected: Any) -> bool:
@@ -70,6 +83,8 @@ def build_expected(state) -> Dict[str, Any]:
             for row in state.nutrition
         ],
     }
+    if t.allergen_notice:  # M4/v2：致敏物质提示行全模板在位
+        expected["allergen_notice"] = True
     if "food_name" not in deleted:
         expected["food_name"] = f"{t.brand} {t.name}"
     if "ingredients" not in deleted:
@@ -90,8 +105,8 @@ def build_expected(state) -> Dict[str, Any]:
     return expected
 
 
-def load_frozen_dataset(data_dir: Path = FROZEN_DIR) -> Tuple[Dict[str, Any], List[Any]]:
-    """读冻结集 truth.json 并内存重建各样本 LabelState（按样本顺序对齐）。"""
+def load_frozen_dataset(data_dir: Path) -> Tuple[Dict[str, Any], List[Any]]:
+    """读数据集 truth.json 并内存重建各样本 LabelState（按样本顺序对齐）。"""
     truth = json.loads((data_dir / "truth.json").read_text(encoding="utf-8"))
     _, _, states = generate_dataset_with_states(
         truth["seed"], truth["n"], truth["categories"]
@@ -100,8 +115,9 @@ def load_frozen_dataset(data_dir: Path = FROZEN_DIR) -> Tuple[Dict[str, Any], Li
     return truth, states
 
 
-def evaluate_frozen(parse_fn: Callable = parse_label, data_dir: Path = FROZEN_DIR):
-    """对冻结集逐样本评测解析器，返回 (metrics, issues)。解析输入为冻结文件。"""
+def evaluate_frozen(parse_fn: Callable = parse_label, data_dir: Any = None):
+    """对数据集逐样本评测解析器，返回 (metrics, issues)。解析输入为语料文件。"""
+    data_dir = resolve_bench_data(data_dir)
     truth, states = load_frozen_dataset(data_dir)
 
     tp = fp = fn = 0

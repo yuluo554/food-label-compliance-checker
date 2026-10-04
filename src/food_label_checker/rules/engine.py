@@ -1,9 +1,10 @@
 """规则引擎：规则集版本化，按 check_type 分派，only_if 类目门控对全部类型生效。
 
-M3 全类型落地（plan/04 §2/§4）：
-- check_type 全集（9 种）：mandatory_field / format / nrv_recalc /
+M3 全类型落地（plan/04 §2/§4）；M4 增补（plan/06 D22）：
+- check_type 全集（11 种）：mandatory_field / format / nrv_recalc /
   energy_consistency / ingredient_order / claim_threshold / claim_whitelist /
-  date_logic / conditional；未知类型显式转"待人工确认"，不静默跳过。
+  date_logic / conditional / nutrition_rows / allergen_notice；未知类型显式转
+  "待人工确认"，不静默跳过。
 - 处理器返回 Finding 列表（行级结论如 NRV% 复算可一规则多 finding）；
   返回 None 表示前置缺失无法执行，计入 stats["not_run"]（不产生结论）。
 - stats 口径：pass + fail + manual == checked == len(findings)；skipped 为
@@ -14,6 +15,10 @@ M3 全类型落地（plan/04 §2/§4）：
   味精、固态食糖、酒精度、饮料酒、葡萄酒、啤酒、黄酒、白酒、米酒）。
 - 依据纪律：basis.status != "已核对" 的规则产出结论自动置
   flagged_pending_basis（报告与 Web 同步显示"依据待核对"）。
+- 降级语义（M4）：unresolved_detail[param]=="present_unparsed"（标示行存在
+  但解析失败）的强制/条件规则转"待人工确认"而非不合规——可能是解析覆盖
+  不足而非标签违规；行整体缺失仍判不合规（V1 语义）。LLM 兜底由 pipeline
+  在解析后尝试回填，规则层本身不感知 LLM。
 
 conditional 语义（GB 7718 豁免条款的确定性近似）：字段缺失时按 params
 依次判定——manual_if_any 命中 → 待人工确认（如酒类豁免以酒精度≥10%vol 为
@@ -132,6 +137,25 @@ def _finding(rule: Dict[str, Any], ruleset_id: str, level: str, message: str,
 # check_type 处理器：返回 Finding 列表；返回 None = 前置缺失，not_run
 # ---------------------------------------------------------------------------
 
+def _manual_present_unparsed(card: LabelCard, rule: Dict[str, Any], ruleset_id: str) -> Optional[Finding]:
+    """标示行存在但结构化解析失败 → 待人工确认（区别于行整体缺失的不合规）。
+
+    该情形可能是解析器覆盖不足而非标签违规；LLM 兜底开启时会先尝试自动
+    抽取（pipeline），抽取失败或不可达时落到本分支（D16/plan/04 §5 降级语义）。
+    """
+    if card.unresolved_detail.get(rule["param"]) != "present_unparsed":
+        return None
+    return Finding(
+        rule_id=rule["id"],
+        level=LEVEL_MANUAL,
+        message=f"『{rule['name']}』的标示行存在但未能解析出结构化值，转待人工确认"
+        "（可启用 LLM 兜底自动抽取后重查）。",
+        ruleset_id=ruleset_id,
+        basis=rule.get("basis", {}),
+        advice=rule.get("advice", ""),
+    )
+
+
 def _check_mandatory_field(card: LabelCard, rule: Dict[str, Any], ruleset_id: str) -> Optional[List[Finding]]:
     param = rule["param"]
     if param == "nutrition_table":  # D19：营养表为顶层列表，不在 fields
@@ -143,6 +167,9 @@ def _check_mandatory_field(card: LabelCard, rule: Dict[str, Any], ruleset_id: st
         evidence = fld.evidence if fld is not None else None
     if present:
         return [_finding(rule, ruleset_id, LEVEL_PASS, f"已标示（{rule['name']}）。", evidence)]
+    manual = _manual_present_unparsed(card, rule, ruleset_id)
+    if manual is not None:
+        return [manual]
     return [_finding(
         rule, ruleset_id, LEVEL_FAIL,
         f"未检出『{rule['name']}』对应的标示内容（参数 {param}）。",
@@ -156,6 +183,10 @@ def _check_conditional(card: LabelCard, rule: Dict[str, Any], ruleset_id: str) -
     fld = card.get(param)
     if fld is not None:
         return [_finding(rule, ruleset_id, LEVEL_PASS, f"已标示（{rule['name']}）。", fld.evidence)]
+
+    manual = _manual_present_unparsed(card, rule, ruleset_id)
+    if manual is not None:
+        return [manual]
 
     text = _card_text(card)
     for kw in params.get("manual_if_any", []):
@@ -359,6 +390,55 @@ def _check_date_logic(card: LabelCard, rule: Dict[str, Any], ruleset_id: str) ->
     )]
 
 
+def _check_nutrition_rows(card: LabelCard, rule: Dict[str, Any], ruleset_id: str) -> Optional[List[Finding]]:
+    """强制营养行完整性（GB 28050-2025 §4.1：能量+6 营养素，M4 新增）。
+
+    营养成分表整体缺失时返回 None（not_run）——该情形由 NUTR-TABLE-01 覆盖，
+    本规则只管"表在但缺行"；行级结论与 NRV 复算同款。
+    """
+    if not card.nutrition_table:
+        return None
+    required = rule.get("params", {}).get("required_rows", [])
+    present = {row.get("name") for row in card.nutrition_table}
+    findings: List[Finding] = []
+    for name in required:
+        if name not in present:
+            findings.append(_finding(
+                rule, ruleset_id, LEVEL_FAIL,
+                f"营养成分表缺『{name}』行：该营养素属强制标示内容"
+                f"（{rule.get('basis', {}).get('clause', '')}）。",
+            ))
+    if findings:
+        return findings
+    return [_finding(rule, ruleset_id, LEVEL_PASS,
+                     f"强制营养行完整（{len(required)} 项：{'、'.join(required)}）。")]
+
+
+def _check_allergen_notice(card: LabelCard, rule: Dict[str, Any], ruleset_id: str) -> Optional[List[Finding]]:
+    """致敏物质提示（GB 7718-2025 §4.12 八类致敏物质，M4 新增）。
+
+    确定性近似：只检索配料表（营养成分表的『蛋白质』等词不参与，防误报）；
+    提示行在位 → 通过；配料含八类关键词而提示缺失 → 不合规；无致敏配料 →
+    通过。D.4 深加工配料/D.5 单一配料等豁免情形无法自动判定，advice 注明
+    人工复核。
+    """
+    fld = card.get("allergen_notice")
+    if fld is not None:
+        return [_finding(rule, ruleset_id, LEVEL_PASS,
+                         "已标示致敏物质提示信息（§4.12 / 附录D）。", fld.evidence)]
+    keywords = rule.get("params", {}).get("allergen_keywords", [])
+    hits = sorted({kw for kw in keywords for ing in card.ingredients if kw in ing})
+    if hits:
+        return [_finding(
+            rule, ruleset_id, LEVEL_FAIL,
+            f"配料含致敏物质（{'、'.join(hits)}，§4.12.1 八类），但未检出致敏物质"
+            "提示信息。",
+            card.get("ingredients").evidence if card.get("ingredients") is not None else None,
+        )]
+    return [_finding(rule, ruleset_id, LEVEL_PASS,
+                     "配料未检出八类致敏物质关键词，提示信息非强制。")]
+
+
 def _check_unsupported(card: LabelCard, rule: Dict[str, Any], ruleset_id: str) -> Optional[List[Finding]]:
     return [_finding(
         rule, ruleset_id, LEVEL_MANUAL,
@@ -377,6 +457,8 @@ _HANDLERS = {
     "claim_threshold": _check_claim_threshold,
     "claim_whitelist": _check_claim_whitelist,
     "date_logic": _check_date_logic,
+    "nutrition_rows": _check_nutrition_rows,
+    "allergen_notice": _check_allergen_notice,
 }
 
 

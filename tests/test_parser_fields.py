@@ -189,11 +189,26 @@ def test_legally_absent_fields_not_unresolved():
     assert not any("声称" in u for u in card.unresolved)
 
 
-def test_non_p0_hint_lines_collected():
-    card = parse_label("食品名称：测试乳\n致敏原提示：含小麦制品\n质量等级：一级\n")
+def test_allergen_notice_parsed_and_quality_grade_unresolved():
+    """M4：致敏物质提示为正式字段（value=True/缺位，D19 同款）；质量等级仍为非 P0 提示。"""
+    text = "食品名称：测试乳\n致敏原提示：含小麦制品\n质量等级：一级\n"
+    card = parse_label(text)
+    fld = card.get("allergen_notice")
+    assert fld is not None and fld.value is True
+    assert fld.evidence.quote == "致敏原提示：含小麦制品"
+    assert text[fld.evidence.span[0]:fld.evidence.span[1]] == fld.evidence.quote
     joined = "\n".join(card.unresolved)
-    assert "致敏原提示" in joined
+    assert "致敏原提示" not in joined
     assert "质量等级" in joined
+    assert "allergen_notice" not in card.unresolved_detail
+
+
+def test_allergen_notice_wording_variants():
+    """引导词变体（D.2.2 字面子集）：致敏物质提示/致敏物质/致敏原信息均解析。"""
+    assert _field("致敏物质提示：含乳。\n", "allergen_notice").value is True
+    assert _field("致敏物质：含大豆蛋白。\n", "allergen_notice").value is True
+    assert _field("致敏原信息：本生产线也加工含小麦制品。\n", "allergen_notice") is not None
+    assert _field("本品含乳制品\n", "allergen_notice") is None  # 无引导词不解析（防误挂）
 
 
 # --- 证据与镜像一致性 ------------------------------------------------------------

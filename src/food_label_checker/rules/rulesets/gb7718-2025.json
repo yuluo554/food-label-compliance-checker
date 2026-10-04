@@ -2,7 +2,7 @@
   "ruleset_id": "gb7718-2025",
   "title": "GB 7718-2025 食品安全国家标准 预包装食品标签通则（2027-03-16 实施）+ GB 28050-2025 营养标签",
   "effective": "2027-03-16",
-  "status_note": "M3 扩库（2026-10-04）：全部规则挂官方原文出处（data/knowledge/blocks/ 条文块 quote_ref），status=已核对；含 2025 新增要求（保质期到期日、盐油糖提示语、『不添加』类声称限制）。确定性近似口径见各规则 params/note 与 plan/06 决策记录。",
+  "status_note": "M3 扩库（2026-10-04）：全部规则挂官方原文出处（data/knowledge/blocks/ 条文块 quote_ref），status=已核对；含 2025 新增要求（保质期到期日、盐油糖提示语、『不添加』类声称限制）。M4 增补（2026-10-04，DATAGEN_VERSION=2 联动）：强制营养行完整性 NUTR-ROWS-01（GB 28050-2025 §4.1）与致敏物质提示 ALLERGEN-01（GB 7718-2025 §4.12）。确定性近似口径见各规则 params/note 与 plan/06 决策记录。",
   "source_files": [
     "data/knowledge/blocks/gb7718-2025.json",
     "data/knowledge/blocks/gb28050-2025.json"
@@ -159,6 +159,33 @@
       "basis": { "standard": "GB 28050-2025", "clause": "3.1 / 4.1（豁免见 §7）", "quote_ref": "gb28050-2025.json#3.1", "status": "已核对" },
       "advice": "预包装食品应标示营养标签；强制标示能量、蛋白质、脂肪、饱和脂肪、碳水化合物、糖和钠的含量及其占 NRV 百分比（豁免情形 §7 请人工判断）。",
       "only_if": null
+    },
+    {
+      "id": "NUTR-ROWS-01",
+      "name": "强制营养行完整性：能量+6 营养素（2025）",
+      "check_type": "nutrition_rows",
+      "param": "nutrition_table",
+      "severity": "不合规",
+      "basis": { "standard": "GB 28050-2025", "clause": "4.1（强制标示能量、蛋白质、脂肪、饱和脂肪(酸)、碳水化合物、糖和钠）", "quote_ref": "gb28050-2025.json#4.1", "status": "已核对" },
+      "advice": "营养成分表应完整标示能量、蛋白质、脂肪、饱和脂肪（酸）、碳水化合物、糖、钠的含量及其占 NRV 百分比，缺行即不合规（表整体缺失由 NUTR-TABLE-01 覆盖；豁免情形 §7 请人工判断）。",
+      "only_if": null,
+      "params": {
+        "required_rows": ["能量", "蛋白质", "脂肪", "饱和脂肪", "碳水化合物", "糖", "钠"]
+      }
+    },
+    {
+      "id": "ALLERGEN-01",
+      "name": "致敏物质提示（2025 新增强制）",
+      "check_type": "allergen_notice",
+      "param": "allergen_notice",
+      "severity": "不合规",
+      "basis": { "standard": "GB 7718-2025", "clause": "4.1 / 4.12.1（八类致敏物质）", "quote_ref": "gb7718-2025.json#4.12.1", "status": "已核对" },
+      "advice": "配料含八类致敏物质（含麸质的谷物/甲壳纲/鱼/蛋/花生/大豆/乳/坚果）时应标示致敏物质提示信息（标示形式见附录D）；D.4 深加工配料与 D.5 单一配料等豁免情形请人工复核。",
+      "only_if": null,
+      "params": {
+        "allergen_keywords": ["小麦", "黑麦", "大麦", "燕麦", "虾", "蟹", "龙虾", "鱼", "蛋", "花生", "大豆", "乳", "坚果"],
+        "keyword_note": "确定性近似：仅检索配料表；豁免判定（D.4/D.5）交人工/LLM 复核"
+      }
     },
     {
       "id": "ING-ORDER-01",

@@ -46,6 +46,7 @@ class Template:
     shelf_value: int
     shelf_unit: str             # 个月 / 天
     v_supported: tuple          # 该模板支持的注入类型（V1 恒支持）
+    allergen_notice: str = ""   # 致敏物质提示行（GB 7718-2025 §4.12；M4/v2 起全部模板在位）
 
 
 TEMPLATES: List[Template] = [
@@ -55,8 +56,9 @@ TEMPLATES: List[Template] = [
         sc_license="SC10532050001234", product_standard="GB 25190",
         net_amount=250, net_unit="mL",
         ingredients=["生牛乳"], over2_prefix=0, nutrition_basis="每100mL",
-        nutrients={"蛋白质": 3.2, "脂肪": 3.6, "饱和脂肪": 2.1, "碳水化合物": 4.8, "钠": 55},
+        nutrients={"蛋白质": 3.2, "脂肪": 3.6, "饱和脂肪": 2.1, "碳水化合物": 4.8, "糖": 0.0, "钠": 55},
         storage="常温避光保存，不得暴晒", shelf_value=6, shelf_unit="个月",
+        allergen_notice="致敏物质提示：含乳。",
         v_supported=("V1", "V2", "V3", "V5", "V7", "V8"),
     ),
     Template(
@@ -68,6 +70,7 @@ TEMPLATES: List[Template] = [
         nutrition_basis="每100g",
         nutrients={"蛋白质": 2.8, "脂肪": 3.0, "饱和脂肪": 1.8, "碳水化合物": 12.0, "糖": 10.5, "钠": 65},
         storage="2℃～6℃冷藏保存", shelf_value=21, shelf_unit="天",
+        allergen_notice="致敏物质提示：含乳。",
         v_supported=("V1", "V2", "V3", "V4", "V5", "V6", "V7", "V8"),
     ),
     Template(
@@ -79,6 +82,7 @@ TEMPLATES: List[Template] = [
         nutrition_basis="每100mL",
         nutrients={"蛋白质": 0.4, "脂肪": 0, "饱和脂肪": 0, "碳水化合物": 10.5, "糖": 9.8, "钠": 20},
         storage="常温避光保存，开启后需冷藏并尽快饮用", shelf_value=9, shelf_unit="个月",
+        allergen_notice="致敏物质提示：本生产线同时加工含乳、大豆制品。",
         v_supported=("V1", "V2", "V3", "V4", "V5", "V6", "V7", "V8"),
     ),
     Template(
@@ -90,6 +94,7 @@ TEMPLATES: List[Template] = [
         nutrition_basis="每100mL",
         nutrients={"蛋白质": 0.2, "脂肪": 0, "饱和脂肪": 0, "碳水化合物": 4.5, "糖": 4.2, "钠": 15},
         storage="常温避光保存，开启后需冷藏并尽快饮用", shelf_value=12, shelf_unit="个月",
+        allergen_notice="致敏物质提示：本生产线同时加工含乳、大豆制品。",
         v_supported=("V1", "V2", "V3", "V4", "V5", "V6", "V7", "V8"),
     ),
     Template(
@@ -101,6 +106,7 @@ TEMPLATES: List[Template] = [
         over2_prefix=4, nutrition_basis="每100g",
         nutrients={"蛋白质": 8.2, "脂肪": 5.5, "饱和脂肪": 1.2, "碳水化合物": 45.0, "糖": 6.0, "钠": 320},
         storage="置阴凉干燥处，避免阳光直射", shelf_value=7, shelf_unit="天",
+        allergen_notice="致敏物质提示：含小麦、蛋。",
         v_supported=("V1", "V2", "V3", "V4", "V5", "V6", "V7", "V8"),
     ),
     Template(
@@ -112,6 +118,7 @@ TEMPLATES: List[Template] = [
         over2_prefix=3, nutrition_basis="每100g",
         nutrients={"蛋白质": 7.5, "脂肪": 12.0, "饱和脂肪": 5.5, "碳水化合物": 68.0, "糖": 15.0, "钠": 580},
         storage="存放于阴凉干燥处，避免受潮", shelf_value=10, shelf_unit="个月",
+        allergen_notice="致敏物质提示：含小麦、乳。",
         v_supported=("V1", "V2", "V3", "V4", "V5", "V6", "V7", "V8"),
     ),
     Template(
@@ -123,6 +130,7 @@ TEMPLATES: List[Template] = [
         over2_prefix=3, nutrition_basis="每100mL",
         nutrients={"蛋白质": 7.0, "脂肪": 0.2, "饱和脂肪": 0, "碳水化合物": 4.0, "糖": 2.0, "钠": 950},
         storage="阴凉避光保存，开封后冷藏", shelf_value=18, shelf_unit="个月",
+        allergen_notice="致敏物质提示：含大豆、小麦。",
         v_supported=("V1", "V2", "V3", "V4", "V5", "V6", "V7", "V8"),
     ),
     Template(
@@ -132,8 +140,9 @@ TEMPLATES: List[Template] = [
         net_amount=500, net_unit="mL",
         ingredients=["水", "高粱", "麸皮", "大米", "食用盐", "白砂糖"], over2_prefix=3,
         nutrition_basis="每100mL",
-        nutrients={"蛋白质": 1.0, "脂肪": 0, "饱和脂肪": 0, "碳水化合物": 3.5, "钠": 520},
+        nutrients={"蛋白质": 1.0, "脂肪": 0, "饱和脂肪": 0, "碳水化合物": 3.5, "糖": 0.0, "钠": 520},
         storage="阴凉干燥处避光保存", shelf_value=24, shelf_unit="个月",
+        allergen_notice="致敏物质提示：含小麦（麸皮）。",
         v_supported=("V1", "V2", "V3", "V5", "V6", "V7", "V8"),
     ),
 ]
@@ -270,6 +279,8 @@ def render_label(state: LabelState) -> str:
         lines.append(f"{row['name']}\t{fmt_amount(row['amount'])}{row['unit']}\t{nrv}")
     # 2025 §4.5 强制提示语（营养成分表下方；M3 契约：2011 规则集不得对其报不合规）
     lines.append(SALT_OIL_SUGAR_NOTICE)
+    if t.allergen_notice:  # GB 7718-2025 §4.12 致敏物质提示（M4/v2 起强制）
+        lines.append(t.allergen_notice)
     for claim in state.claims:
         lines.append(f"声称：{claim}")
     return "\n".join(lines) + "\n"

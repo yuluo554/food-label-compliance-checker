@@ -41,6 +41,12 @@ class LabelCard:
     ingredients: List[str] = field(default_factory=list)
     claims: List[str] = field(default_factory=list)
     unresolved: List[str] = field(default_factory=list)
+    # M4：unresolved 的机器可读子集，key → "present_unparsed"（标示行存在但
+    # 结构化解析失败）。规则层据此对"行在而值不可析"输出"待人工确认"而非
+    # 不合规——与"行整体缺失"（V1 语义，不合规）区分；D19 契约的追加项。
+    unresolved_detail: Dict[str, str] = field(default_factory=dict)
+    # M4：LLM 兜底参与过字段抽取时置 True（数值结论仍全部来自确定性规则）。
+    llm_assisted: bool = False
 
     def has(self, key: str) -> bool:
         return key in self.fields
