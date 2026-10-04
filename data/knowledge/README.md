@@ -12,11 +12,13 @@
 
 ## 目录
 
-- `raw/` —— M1 起入库，当前为空（来源渠道见 plan/05 §1.2）
-- `blocks/` —— M3 起填充
-- `rules/` —— 待核对清单与来源登记（当前无）
+- `raw/` —— M1 起入库：四部标准官方 PDF + `_extracted/` 提取文本（PyMuPDF，重提取命令见 tools/build_blocks.py）+ 渠道台账
+- `blocks/` —— M3 已填充：4 部标准 428 块（块号=条款号，`basis.quote_ref` 引用格式 `<file_id>.json#<条款号>`；守门 tests/test_blocks.py）
+- `rules/` —— 规则来源台账（M3）
 
 ## status 取值约定
 
 - `已核对`：挂有官方原文出处（标准号+条号+渠道），结论允许确定语气；
 - `待核对`：尚未挂原文，结论自动带"依据待核对"标注（引擎 `flagged_pending_basis` 强制置位）。
+
+M3 现状：规则集 45 条全部 `已核对`（挂条文块 quote_ref）；仍开放的待核对项为 GB/T 8170 修约总则与《食品安全法》文本（见 data/README.md 查证记录）。

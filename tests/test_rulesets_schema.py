@@ -44,3 +44,52 @@ def test_ruleset_schema(ruleset_id):
 def test_rulesets_dir_matches_available():
     on_disk = sorted(p.stem for p in RULESETS_DIR.glob("*.json"))
     assert on_disk == sorted(AVAILABLE_RULESETS)
+
+
+def test_ruleset_total_count_at_least_40():
+    """M3 DoD：双版本规则合计 ≥40 条。"""
+    total = sum(
+        len(json.loads((RULESETS_DIR / f"{rid}.json").read_text(encoding="utf-8"))["rules"])
+        for rid in AVAILABLE_RULESETS
+    )
+    assert total >= 40
+
+
+def test_d16_contract_rule_ids_present():
+    """D16 V→规则契约：V1–V8 主期望 rule_id 必须在规则库中（2011 豁免除外）。"""
+    lib = {
+        rid: {r["id"] for r in json.loads(
+            (RULESETS_DIR / f"{rid}.json").read_text(encoding="utf-8"))["rules"]}
+        for rid in AVAILABLE_RULESETS
+    }
+    for rid, ids in lib.items():
+        expected = {
+            "MAND-NAME-01", "MAND-ING-01", "MAND-NET-01", "MAND-SHELF-01",
+            "MAND-DATE-01", "MAND-STORAGE-01", "MAND-SC-01",
+            "NRV-RECALC-01", "ENERGY-CONSIST-01", "CLAIM-THRESH-01",
+            "ING-ORDER-01", "FMT-DATE-01", "DATE-LOGIC-01", "CLAIM-FUNC-01",
+        }
+        if rid == "gb7718-2025":
+            expected |= {"MAND-EXPIRY-01", "CLAIM-ZEROADD-01", "SALT-NOTICE-01"}
+        else:
+            # 2011 豁免契约（D16）：不得含 2025 新增声称限制规则
+            assert "CLAIM-ZEROADD-01" not in ids
+        missing = expected - ids
+        assert not missing, f"{rid} 缺 D16 契约规则：{sorted(missing)}"
+
+
+def test_only_if_gate_vocabulary_documented():
+    """门控词表（M3 定稿）：only_if 关键词与规则 params 先验词表必须显式声明。"""
+    for rid in AVAILABLE_RULESETS:
+        data = json.loads((RULESETS_DIR / f"{rid}.json").read_text(encoding="utf-8"))
+        for rule in data["rules"]:
+            if rule.get("only_if"):
+                assert isinstance(rule["only_if"], list)
+            if rule["check_type"] == "ingredient_order":
+                pairs = rule.get("params", {}).get("ordered_pairs")
+                assert pairs and all(len(p) == 2 for p in pairs), rule["id"]
+            if rule["check_type"] == "claim_whitelist":
+                assert rule.get("params", {}).get("forbidden_terms"), rule["id"]
+            if rule["check_type"] == "conditional":
+                params = rule.get("params", {})
+                assert "exempt_if_any" in params and "manual_if_any" in params, rule["id"]

@@ -26,7 +26,8 @@ def test_check_sample_dual_ruleset(sample_text, tmp_path, capsys):
     out = capsys.readouterr().out
     data = json.loads(out)
     assert set(data["results"]) == {"gb7718-2011", "gb7718-2025"}
-    assert data["dual_diff"]["new_fails"] == ["MAND-EXPIRY-01"]
+    # 样例缺净含量/营养成分表（两版都报）+ 缺到期日/盐油糖提示语（仅 2025 报）
+    assert data["dual_diff"]["new_fails"] == ["MAND-EXPIRY-01", "SALT-NOTICE-01"]
     assert data["card"]["fields"]["food_name"]
 
 

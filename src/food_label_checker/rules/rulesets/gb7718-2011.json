@@ -1,9 +1,12 @@
 {
   "ruleset_id": "gb7718-2011",
-  "title": "GB 7718-2011 食品安全国家标准 预包装食品标签通则（现行）",
+  "title": "GB 7718-2011 食品安全国家标准 预包装食品标签通则（现行）+ GB 28050-2011 营养标签（现行）",
   "effective": "2012-04-20",
-  "status_note": "M0 骨架最小规则集：仅示范引擎通路。全部条款号与要求 status=待核对，M3 挂原文出处后才允许输出确定语气结论。",
-  "source_files": [],
+  "status_note": "M3 扩库（2026-10-04）：全部规则挂官方原文出处（data/knowledge/blocks/ 条文块 quote_ref），status=已核对；确定性近似口径（日期格式从严判定、配料序先验对、豁免关键词近似）见各规则 params/note 与 plan/06 决策记录。",
+  "source_files": [
+    "data/knowledge/blocks/gb7718-2011.json",
+    "data/knowledge/blocks/gb28050-2011.json"
+  ],
   "rules": [
     {
       "id": "MAND-NAME-01",
@@ -11,8 +14,18 @@
       "check_type": "mandatory_field",
       "param": "food_name",
       "severity": "不合规",
-      "basis": { "standard": "GB 7718-2011", "clause": "4.1.2（待核对）", "status": "待核对" },
-      "advice": "应在标签醒目位置标示反映食品真实属性的食品名称。",
+      "basis": { "standard": "GB 7718-2011", "clause": "4.1.1 / 4.1.2.1", "quote_ref": "gb7718-2011.json#4.1.2.1", "status": "已核对" },
+      "advice": "应在食品标签的醒目位置，清晰地标示反映食品真实属性的专用名称。",
+      "only_if": null
+    },
+    {
+      "id": "MAND-ING-01",
+      "name": "强制标示：配料表",
+      "check_type": "mandatory_field",
+      "param": "ingredients",
+      "severity": "不合规",
+      "basis": { "standard": "GB 7718-2011", "clause": "4.1.1 / 4.1.3.1.1", "quote_ref": "gb7718-2011.json#4.1.3.1.1", "status": "已核对" },
+      "advice": "应标示配料表，并以『配料』或『配料表』为引导词。",
       "only_if": null
     },
     {
@@ -21,8 +34,8 @@
       "check_type": "mandatory_field",
       "param": "net_content",
       "severity": "不合规",
-      "basis": { "standard": "GB 7718-2011", "clause": "4.1.5（待核对）", "status": "待核对" },
-      "advice": "应标示净含量，标示由净含量、数字和法定计量单位组成。",
+      "basis": { "standard": "GB 7718-2011", "clause": "4.1.1 / 4.1.5.1", "quote_ref": "gb7718-2011.json#4.1.5.1", "status": "已核对" },
+      "advice": "净含量的标示应由净含量、数字和法定计量单位组成（标示形式参见附录C）。",
       "only_if": null
     },
     {
@@ -31,9 +44,207 @@
       "check_type": "mandatory_field",
       "param": "production_date",
       "severity": "不合规",
-      "basis": { "standard": "GB 7718-2011", "clause": "4.1.7（待核对）", "status": "待核对" },
+      "basis": { "standard": "GB 7718-2011", "clause": "4.1.7.1", "quote_ref": "gb7718-2011.json#4.1.7.1", "status": "已核对" },
       "advice": "应清晰标示预包装食品的生产日期（或包装日期、灌装日期）。",
       "only_if": null
+    },
+    {
+      "id": "MAND-SHELF-01",
+      "name": "强制标示：保质期（豁免情形除外）",
+      "check_type": "conditional",
+      "param": "shelf_life",
+      "severity": "不合规",
+      "basis": { "standard": "GB 7718-2011", "clause": "4.1.7.1 / 4.3.1（豁免）", "quote_ref": "gb7718-2011.json#4.3.1", "status": "已核对" },
+      "advice": "应清晰标示保质期；酒精度≥10%vol 饮料酒、食醋、食用盐、固态食糖类、味精可免除（酒类豁免以度数为准，转人工）。",
+      "only_if": null,
+      "params": {
+        "exempt_if_any": ["食醋", "食用盐", "味精", "固态食糖"],
+        "manual_if_any": ["酒精度", "饮料酒", "啤酒", "黄酒", "白酒", "米酒"],
+        "manual_note": "酒类豁免以酒精度≥10%vol 为条件，自动核对无法读取度数。",
+        "require_production_date": false
+      }
+    },
+    {
+      "id": "MAND-STORAGE-01",
+      "name": "强制标示：贮存条件",
+      "check_type": "mandatory_field",
+      "param": "storage_conditions",
+      "severity": "不合规",
+      "basis": { "standard": "GB 7718-2011", "clause": "4.1.8", "quote_ref": "gb7718-2011.json#4.1.8", "status": "已核对" },
+      "advice": "预包装食品标签应标示贮存条件（标示形式参见附录C）。",
+      "only_if": null
+    },
+    {
+      "id": "MAND-PRODUCER-01",
+      "name": "强制标示：生产者名称",
+      "check_type": "mandatory_field",
+      "param": "producer_name",
+      "severity": "不合规",
+      "basis": { "standard": "GB 7718-2011", "clause": "4.1.6.1", "quote_ref": "gb7718-2011.json#4.1.6.1", "status": "已核对" },
+      "advice": "应当标注生产者的名称、地址和联系方式（依法登记注册、能承担安全质量责任者）。",
+      "only_if": null
+    },
+    {
+      "id": "MAND-ADDRESS-01",
+      "name": "强制标示：生产者地址",
+      "check_type": "mandatory_field",
+      "param": "producer_address",
+      "severity": "不合规",
+      "basis": { "standard": "GB 7718-2011", "clause": "4.1.6.1", "quote_ref": "gb7718-2011.json#4.1.6.1", "status": "已核对" },
+      "advice": "应标注依法登记注册的生产者地址。",
+      "only_if": null
+    },
+    {
+      "id": "MAND-CONTACT-01",
+      "name": "强制标示：联系方式",
+      "check_type": "mandatory_field",
+      "param": "producer_contact",
+      "severity": "不合规",
+      "basis": { "standard": "GB 7718-2011", "clause": "4.1.6.2", "quote_ref": "gb7718-2011.json#4.1.6.2", "status": "已核对" },
+      "advice": "联系方式应标示电话、传真、网络联系方式等至少一项，或与地址一并标示的邮政地址。",
+      "only_if": null
+    },
+    {
+      "id": "MAND-SC-01",
+      "name": "强制标示：食品生产许可证编号",
+      "check_type": "mandatory_field",
+      "param": "sc_license",
+      "severity": "不合规",
+      "basis": { "standard": "GB 7718-2011", "clause": "4.1.9", "quote_ref": "gb7718-2011.json#4.1.9", "status": "已核对" },
+      "advice": "预包装食品标签应标示食品生产许可证编号，标示形式按照相关规定执行。",
+      "only_if": null
+    },
+    {
+      "id": "MAND-STD-01",
+      "name": "强制标示：产品标准代号",
+      "check_type": "mandatory_field",
+      "param": "product_standard",
+      "severity": "不合规",
+      "basis": { "standard": "GB 7718-2011", "clause": "4.1.10", "quote_ref": "gb7718-2011.json#4.1.10", "status": "已核对" },
+      "advice": "在国内生产并在国内销售的预包装食品（不包括进口）应标示产品所执行的标准代号和顺序号。",
+      "only_if": null
+    },
+    {
+      "id": "NUTR-TABLE-01",
+      "name": "强制标示：营养成分表（能量与核心营养素）",
+      "check_type": "mandatory_field",
+      "param": "nutrition_table",
+      "severity": "不合规",
+      "basis": { "standard": "GB 28050-2011", "clause": "4.1（豁免见 §7）", "quote_ref": "gb28050-2011.json#4.1", "status": "已核对" },
+      "advice": "所有预包装食品营养标签强制标示能量和核心营养素（蛋白质、脂肪、碳水化合物、钠）的含量值及其占 NRV 百分比；豁免情形（§7）请人工判断。",
+      "only_if": null
+    },
+    {
+      "id": "ING-ORDER-01",
+      "name": "配料递减序：果汁饮料类先验对",
+      "check_type": "ingredient_order",
+      "param": "ingredients",
+      "severity": "不合规",
+      "basis": { "standard": "GB 7718-2011", "clause": "4.1.3.1.2", "quote_ref": "gb7718-2011.json#4.1.3.1.2", "status": "已核对" },
+      "advice": "各种配料应按制造或加工食品时加入量的递减顺序一一排列（加入量不超过2%的配料可不按递减顺序排列）。",
+      "only_if": ["果汁饮料"],
+      "params": {
+        "ordered_pairs": [["水", "苹果汁"], ["苹果汁", "白砂糖"]],
+        "prior_note": "确定性先验：果汁饮料类中水、果汁为主配料且应先于白砂糖；先验对被颠倒才报，其余无法定量判定交人工/LLM 兜底。"
+      }
+    },
+    {
+      "id": "ING-ORDER-02",
+      "name": "配料递减序：发酵乳类先验对",
+      "check_type": "ingredient_order",
+      "param": "ingredients",
+      "severity": "不合规",
+      "basis": { "standard": "GB 7718-2011", "clause": "4.1.3.1.2", "quote_ref": "gb7718-2011.json#4.1.3.1.2", "status": "已核对" },
+      "advice": "各种配料应按加入量递减顺序排列；发酵乳以生牛乳为主要原料（占比通常 >80%）。",
+      "only_if": ["发酵乳", "酸乳"],
+      "params": {
+        "ordered_pairs": [["生牛乳", "白砂糖"], ["生牛乳", "食用香精"]],
+        "prior_note": "确定性先验：发酵乳/酸乳类中生牛乳为主要配料应居白砂糖、食用香精之前。"
+      }
+    },
+    {
+      "id": "FMT-DATE-01",
+      "name": "日期标示格式：生产日期",
+      "check_type": "format",
+      "param": "production_date",
+      "severity": "不合规",
+      "basis": { "standard": "GB 7718-2011", "clause": "4.1.7.3 + 附录C C.3", "quote_ref": "gb7718-2011.json#4.1.7.3", "status": "已核对" },
+      "advice": "应按年、月、日的顺序标示日期，月、日应标示2位数字；推荐采用『YYYY年MM月DD日』形式。",
+      "only_if": null,
+      "params": {
+        "pattern": "\\d{4}年\\d{2}月\\d{2}日",
+        "expect_desc": "YYYY年MM月DD日",
+        "format_note": "月、日应标示2位数字（C.3）；本项目按 D16/D19 契约以规范中式格式为判定基准，从严口径见 plan/06"
+      }
+    },
+    {
+      "id": "FMT-DATE-02",
+      "name": "日期标示格式：保质期到期日",
+      "check_type": "format",
+      "param": "expiry_date",
+      "severity": "不合规",
+      "basis": { "standard": "GB 7718-2011", "clause": "4.1.7.3 + 附录C C.3", "quote_ref": "gb7718-2011.json#C.3", "status": "已核对" },
+      "advice": "日期标示应按年、月、日顺序且月日两位；到期日推荐『YYYY年MM月DD日』形式。",
+      "only_if": null,
+      "params": {
+        "pattern": "\\d{4}年\\d{2}月\\d{2}日",
+        "expect_desc": "YYYY年MM月DD日",
+        "format_note": "同 FMT-DATE-01，从严口径见 plan/06"
+      }
+    },
+    {
+      "id": "DATE-LOGIC-01",
+      "name": "日期逻辑自洽：到期日=生产日期+保质期",
+      "check_type": "date_logic",
+      "param": "expiry_date",
+      "severity": "不合规",
+      "basis": { "standard": "GB 7718-2011", "clause": "4.1.7.1 + 3.4（真实准确）", "quote_ref": "gb7718-2011.json#4.1.7.1", "status": "已核对" },
+      "advice": "标示的保质期到期日应与生产日期、保质期自洽；到期日推算口径（月加法日截断/天加法）为生成器约定（D16），GB 未明文规定推算方法。",
+      "only_if": null
+    },
+    {
+      "id": "NRV-RECALC-01",
+      "name": "NRV% 复算（修约间隔 1）",
+      "check_type": "nrv_recalc",
+      "param": "nutrition_table",
+      "severity": "不合规",
+      "basis": { "standard": "GB 28050-2011", "clause": "A.2 / A.3（NRV% = X/NRV×100，修约间隔 1）", "quote_ref": "gb28050-2011.json#A.2", "status": "已核对" },
+      "advice": "营养成分表各行 NRV% 应按含量与附录A NRV 基准值计算，修约间隔为 1；基准值表见 rules/nutrient_reference.json。",
+      "only_if": null
+    },
+    {
+      "id": "ENERGY-CONSIST-01",
+      "name": "能量折算一致性（表2 允许误差）",
+      "check_type": "energy_consistency",
+      "param": "nutrition_table",
+      "severity": "不合规",
+      "basis": { "standard": "GB 28050-2011", "clause": "6.4 表2（能量实际值 ≤120% 标示值）", "quote_ref": "gb28050-2011.json#6.4", "status": "已核对" },
+      "advice": "能量应与蛋白质/脂肪/碳水化合物按系数折算自洽（系数 17/37/17 kJ/g 挂 GB 28050-2025 §2.3，2011 版无对应条款，D20）；低报超出表2 允许误差即不合规。",
+      "only_if": null
+    },
+    {
+      "id": "CLAIM-THRESH-01",
+      "name": "营养声称阈值（无糖/低糖/低钠）",
+      "check_type": "claim_threshold",
+      "param": "claims",
+      "severity": "不合规",
+      "basis": { "standard": "GB 28050-2011", "clause": "附录C 表C.1（含量声称要求和条件）", "quote_ref": "gb28050-2011.json#C.1", "status": "已核对" },
+      "advice": "声称应满足表C.1 含量要求：无糖 ≤0.5g/100g(mL)、低糖 ≤5g/100g(mL)、低钠 ≤120mg/100g(mL)；阈值表见 rules/nutrient_reference.json。",
+      "only_if": null
+    },
+    {
+      "id": "CLAIM-FUNC-01",
+      "name": "功能声称禁用语（疾病预防/治疗类）",
+      "check_type": "claim_whitelist",
+      "param": "claims",
+      "severity": "不合规",
+      "basis": { "standard": "GB 7718-2011", "clause": "3.6（不应标注或暗示预防、治疗疾病作用）", "quote_ref": "gb7718-2011.json#3.6", "status": "已核对" },
+      "advice": "不得标示疾病预防、治疗功能；营养成分功能声称仅可使用 GB 28050-2011 附录D 标准用语（D.2–D.24）。",
+      "only_if": null,
+      "params": {
+        "forbidden_terms": ["降血糖", "降血压", "降血脂", "防癌", "抗癌", "治疗", "消炎", "抑菌", "药用", "疗效", "预防疾病", "保健"],
+        "term_kind": "疾病预防/治疗类禁用语"
+      }
     }
   ]
 }
