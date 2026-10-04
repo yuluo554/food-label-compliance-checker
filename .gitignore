@@ -20,3 +20,7 @@ reports/
 Thumbs.db
 Desktop.ini
 .DS_Store
+
+# 生成器批量产物不入仓；仅冻结 fixtures 小集入仓（fixtures 策略见 plan/05 §1.1/§1.3）
+data/generated/*
+!data/generated/frozen/

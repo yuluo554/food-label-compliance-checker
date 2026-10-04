@@ -1,0 +1,295 @@
+{
+  "generator_version": "1",
+  "seed": 2026,
+  "n": 12,
+  "categories": [
+    "乳制品",
+    "饮料",
+    "烘焙",
+    "调味品"
+  ],
+  "truth_semantics": "主期望+also_expect 语义与对账口径见 datagen/__init__.py 模块注释（M1 定稿）",
+  "samples": [
+    {
+      "sample_id": "sample-0001",
+      "file": "sample-0001-dairy-fermented.txt",
+      "seed": 2026,
+      "rng_key": "2026:0",
+      "generator_version": "1",
+      "category": "乳制品",
+      "template": "dairy-fermented",
+      "clean_baseline": true,
+      "injections": []
+    },
+    {
+      "sample_id": "sample-0002",
+      "file": "sample-0002-beverage-juice.txt",
+      "seed": 2026,
+      "rng_key": "2026:1",
+      "generator_version": "1",
+      "category": "饮料",
+      "template": "beverage-juice",
+      "clean_baseline": true,
+      "injections": []
+    },
+    {
+      "sample_id": "sample-0003",
+      "file": "sample-0003-bakery-bread.txt",
+      "seed": 2026,
+      "rng_key": "2026:2",
+      "generator_version": "1",
+      "category": "烘焙",
+      "template": "bakery-bread",
+      "clean_baseline": true,
+      "injections": []
+    },
+    {
+      "sample_id": "sample-0004",
+      "file": "sample-0004-condiment-soy-sauce.txt",
+      "seed": 2026,
+      "rng_key": "2026:3",
+      "generator_version": "1",
+      "category": "调味品",
+      "template": "condiment-soy-sauce",
+      "clean_baseline": true,
+      "injections": []
+    },
+    {
+      "sample_id": "sample-0005",
+      "file": "sample-0005-dairy-fermented.txt",
+      "seed": 2026,
+      "rng_key": "2026:4",
+      "generator_version": "1",
+      "category": "乳制品",
+      "template": "dairy-fermented",
+      "clean_baseline": false,
+      "injections": [
+        {
+          "type": "V1",
+          "main_expect": {
+            "rule_id": "MAND-ING-01",
+            "level": "不合规"
+          },
+          "also_expect": [],
+          "detail": {
+            "deleted_field": "ingredients",
+            "deleted_label": "配料"
+          }
+        },
+        {
+          "type": "V1",
+          "main_expect": {
+            "rule_id": "MAND-SHELF-01",
+            "level": "不合规"
+          },
+          "also_expect": [],
+          "detail": {
+            "deleted_field": "shelf_life",
+            "deleted_label": "保质期"
+          }
+        }
+      ]
+    },
+    {
+      "sample_id": "sample-0006",
+      "file": "sample-0006-beverage-tea.txt",
+      "seed": 2026,
+      "rng_key": "2026:5",
+      "generator_version": "1",
+      "category": "饮料",
+      "template": "beverage-tea",
+      "clean_baseline": false,
+      "injections": [
+        {
+          "type": "V2",
+          "main_expect": {
+            "rule_id": "NRV-RECALC-01",
+            "level": "不合规"
+          },
+          "also_expect": [
+            {
+              "kind": "info",
+              "note": "NRV% 行级结论挂在被改写行上"
+            }
+          ],
+          "detail": {
+            "row": "碳水化合物",
+            "shown_nrv_percent": 7,
+            "recomputed_nrv_percent": 2
+          }
+        }
+      ]
+    },
+    {
+      "sample_id": "sample-0007",
+      "file": "sample-0007-bakery-bread.txt",
+      "seed": 2026,
+      "rng_key": "2026:6",
+      "generator_version": "1",
+      "category": "烘焙",
+      "template": "bakery-bread",
+      "clean_baseline": false,
+      "injections": [
+        {
+          "type": "V3",
+          "main_expect": {
+            "rule_id": "ENERGY-CONSIST-01",
+            "level": "不合规"
+          },
+          "also_expect": [],
+          "detail": {
+            "shown_energy_kj": 665,
+            "recomputed_energy_kj": 1108,
+            "shown_nrv_percent": 8
+          }
+        }
+      ]
+    },
+    {
+      "sample_id": "sample-0008",
+      "file": "sample-0008-condiment-soy-sauce.txt",
+      "seed": 2026,
+      "rng_key": "2026:7",
+      "generator_version": "1",
+      "category": "调味品",
+      "template": "condiment-soy-sauce",
+      "clean_baseline": false,
+      "injections": [
+        {
+          "type": "V4",
+          "main_expect": {
+            "rule_id": "CLAIM-THRESH-01",
+            "level": "不合规"
+          },
+          "also_expect": [
+            {
+              "kind": "info",
+              "note": "无糖阈值 ≤0.5g/100g(mL)，2011 表C.1 / 2025 表C.1 已核对"
+            }
+          ],
+          "detail": {
+            "claim": "无糖",
+            "sugar_row_value": "2g/100g(mL)"
+          }
+        }
+      ]
+    },
+    {
+      "sample_id": "sample-0009",
+      "file": "sample-0009-dairy-fermented.txt",
+      "seed": 2026,
+      "rng_key": "2026:8",
+      "generator_version": "1",
+      "category": "乳制品",
+      "template": "dairy-fermented",
+      "clean_baseline": false,
+      "injections": [
+        {
+          "type": "V5",
+          "main_expect": {
+            "rule_id": "CLAIM-ZEROADD-01",
+            "level": "不合规"
+          },
+          "also_expect": [
+            {
+              "absent_in_ruleset": "gb7718-2011",
+              "rule_id": "CLAIM-ZEROADD-01"
+            },
+            {
+              "present_in_ruleset": "gb7718-2025",
+              "rule_id": "CLAIM-ZEROADD-01"
+            }
+          ],
+          "detail": {
+            "claim": "零添加甜味剂"
+          }
+        }
+      ]
+    },
+    {
+      "sample_id": "sample-0010",
+      "file": "sample-0010-beverage-juice.txt",
+      "seed": 2026,
+      "rng_key": "2026:9",
+      "generator_version": "1",
+      "category": "饮料",
+      "template": "beverage-juice",
+      "clean_baseline": false,
+      "injections": [
+        {
+          "type": "V6",
+          "main_expect": {
+            "rule_id": "ING-ORDER-01",
+            "level": "不合规"
+          },
+          "also_expect": [
+            {
+              "kind": "info",
+              "note": "互换双方占比均 >2%，不适用 ≤2% 例外"
+            }
+          ],
+          "detail": {
+            "swapped": [
+              "苹果汁",
+              "白砂糖"
+            ],
+            "position": 1
+          }
+        }
+      ]
+    },
+    {
+      "sample_id": "sample-0011",
+      "file": "sample-0011-bakery-biscuit.txt",
+      "seed": 2026,
+      "rng_key": "2026:10",
+      "generator_version": "1",
+      "category": "烘焙",
+      "template": "bakery-biscuit",
+      "clean_baseline": false,
+      "injections": [
+        {
+          "type": "V7",
+          "main_expect": {
+            "rule_id": "FMT-DATE-01",
+            "level": "不合规"
+          },
+          "also_expect": [],
+          "detail": {
+            "variant": "format",
+            "shown": "2026/9/12",
+            "correct": "2026年09月12日"
+          }
+        }
+      ]
+    },
+    {
+      "sample_id": "sample-0012",
+      "file": "sample-0012-condiment-vinegar.txt",
+      "seed": 2026,
+      "rng_key": "2026:11",
+      "generator_version": "1",
+      "category": "调味品",
+      "template": "condiment-vinegar",
+      "clean_baseline": false,
+      "injections": [
+        {
+          "type": "V8",
+          "main_expect": {
+            "rule_id": "CLAIM-FUNC-01",
+            "level": "不合规"
+          },
+          "also_expect": [
+            {
+              "kind": "info",
+              "note": "白名单外：2011 附录D（D.2–D.24）/ 2025 附录D 为营养素作用声称标准用语，已核对；所选拼写均为疾病类声称，任何版本均不允许"
+            }
+          ],
+          "detail": {
+            "claim": "消炎抑菌"
+          }
+        }
+      ]
+    }
+  ]
+}
