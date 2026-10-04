@@ -1,0 +1,49 @@
+{
+  "ruleset_id": "gb7718-2025",
+  "title": "GB 7718-2025 食品安全国家标准 预包装食品标签通则（2027-03-16 实施）",
+  "effective": "2027-03-16",
+  "status_note": "M0 骨架最小规则集：仅示范引擎通路与双标尺差异。全部条款号与要求 status=待核对，M3 挂原文出处后才允许输出确定语气结论。",
+  "source_files": [],
+  "rules": [
+    {
+      "id": "MAND-NAME-01",
+      "name": "强制标示：食品名称",
+      "check_type": "mandatory_field",
+      "param": "food_name",
+      "severity": "不合规",
+      "basis": { "standard": "GB 7718-2025", "clause": "4.1.2（待核对）", "status": "待核对" },
+      "advice": "应在标签醒目位置标示反映食品真实属性的食品名称。",
+      "only_if": null
+    },
+    {
+      "id": "MAND-NET-01",
+      "name": "强制标示：净含量与规格",
+      "check_type": "mandatory_field",
+      "param": "net_content",
+      "severity": "不合规",
+      "basis": { "standard": "GB 7718-2025", "clause": "4.1.5（待核对）", "status": "待核对" },
+      "advice": "应标示净含量，标示由净含量、数字和法定计量单位组成。",
+      "only_if": null
+    },
+    {
+      "id": "MAND-DATE-01",
+      "name": "强制标示：生产日期",
+      "check_type": "mandatory_field",
+      "param": "production_date",
+      "severity": "不合规",
+      "basis": { "standard": "GB 7718-2025", "clause": "4.1.7（待核对）", "status": "待核对" },
+      "advice": "应清晰标示预包装食品的生产日期。",
+      "only_if": null
+    },
+    {
+      "id": "MAND-EXPIRY-01",
+      "name": "强制标示：保质期到期日（新版要求）",
+      "check_type": "mandatory_field",
+      "param": "expiry_date",
+      "severity": "不合规",
+      "basis": { "standard": "GB 7718-2025", "clause": "4.1.7（待核对）", "status": "待核对" },
+      "advice": "新版标准要求标示保质期到期日，换版期存量标签需补齐。",
+      "only_if": null
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+# 统一 LF（EOL 门：冻结 fixtures 与基准可复现的字节一致性前提，决策 D13）
+* text=auto eol=lf
+
+# 二进制文件不做行尾转换
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.docx binary
+*.pdf binary
+*.zip binary

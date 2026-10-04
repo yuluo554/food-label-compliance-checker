@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "food-label-compliance-checker"
+version = "0.1.0"
+description = "预包装食品标签合规智能审查系统：GB 7718-2011/2025 双标尺规则引擎，内置可复现评测基准"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+authors = [{ name = "yuluo554" }]
+keywords = ["food-label", "gb7718", "gb28050", "compliance", "nutrition-label", "food-safety"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Food Industry",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0", "httpx>=0.24"]
+web = ["fastapi>=0.100", "uvicorn>=0.20", "python-multipart>=0.0.5"]
+report = ["python-docx>=0.8.11"]
+llm = ["httpx>=0.24"]
+
+[project.scripts]
+flcheck = "food_label_checker.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"food_label_checker.rules" = ["rulesets/*.json"]
