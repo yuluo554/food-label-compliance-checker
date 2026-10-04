@@ -2,11 +2,11 @@
 
 预包装食品标签合规智能审查系统——面向 GB 7718/GB 28050 换版期（新版标准 2025-03-27 发布、2027-03-16 强制实施）的标签审查开源工具：把文本标签解析为结构化"参数卡"，用**双标尺规则引擎**分别按 GB 7718-2011（现行）与 GB 7718-2025（过渡期）审查，输出"现行合规 / 新规不合规"对照，每条结论挂标准条款出处与标签原文证据。
 
-> **项目状态：🚧 脱敏发布准备（M6）**。垂直切片、**合成标签生成器**（固定 seed 位级复现 + V1–V8 违规注入真值）、**全量文本解析**（参数卡全字段 + 逐字证据）、**全量双标尺规则引擎**（47 条规则挂官方原文、11 种检查类型、数值复算）、**内置评测基准**（`flcheck bench`，解析 F1=1.0 / 误报 0）、**LLM 兜底适配器**（默认关闭，quote 逐字校验防幻觉）与**交付形态**（pipeline 状态机 / docx 审查报告 / Web 面板）已真实可跑；条文块知识库（四部标准 428 块）已入库挂出处。发布（M6）按 [plan/05](plan/05-数据计划与里程碑.md) 里程碑推进。规划中的能力见下文"特性"，**请勿将未标注"已实现"的内容当作可用功能**。
+> **项目状态：✅ v0.6.0 已公开发布**（[Release](https://github.com/yuluo554/food-label-compliance-checker/releases/tag/v0.6.0)，M0–M6 全量交付，发布门实录见 [plan/RELEASE-M6.md](plan/RELEASE-M6.md)）。垂直切片、**合成标签生成器**（固定 seed 位级复现 + V1–V8 违规注入真值）、**全量文本解析**（参数卡全字段 + 逐字证据）、**全量双标尺规则引擎**（47 条规则挂官方原文、11 种检查类型、数值复算）、**内置评测基准**（`flcheck bench`，解析 F1=1.0 / 误报 0）、**LLM 兜底适配器**（默认关闭，quote 逐字校验防幻觉）与**交付形态**（pipeline 状态机 / docx 审查报告 / Web 面板）均已真实可跑并经干净环境验证；条文块知识库（四部标准 428 块）已入库挂出处。规划中的能力见下文"特性"，**请勿将未标注"已实现"的内容当作可用功能**。
 
 ## 特性
 
-**已实现（M0 骨架 → M1 数据先行 → M2 解析层 → M3 知识与规则 → M4 基准与 LLM 兜底 → M5 编排与交付）**
+**已实现（M0 骨架 → M1 数据先行 → M2 解析层 → M3 知识与规则 → M4 基准与 LLM 兜底 → M5 编排与交付 → M6 脱敏发布）**
 
 - 标签参数卡统一中间表示（字段-值-单位-置信度-证据），证据含标签区域+原文逐字摘录+字符偏移；全 P0 字段解析（配料表、三列制表符营养成分表行级证据、双日期、SC 号、声称、盐油糖提示语与致敏物质提示在位性等），非规范日期也解析出 ISO 值不误报
 - **双标尺规则引擎（47 条规则）**：`gb7718-2011`（21 条）与 `gb7718-2025`（26 条，含保质期到期日、盐油糖提示语、"不添加"类受限声称、强制营养行完整性、致敏物质提示等 2025 新增）跑同一标签，输出 `dual_diff`（新增/消除的不合规项）
@@ -21,11 +21,11 @@
 - **pipeline 状态机（M5）**：`load_input → parse → llm 兜底（可选）→ run_ruleset×N → merge+diff → emit`，每节点记录耗时与状态（`pipeline.nodes`），降级节点汇入 `warnings`；输入类失败明确报错退出（退出码 2），规则类失败降级为该规则集结果缺失+警告，不吞异常
 - **docx 审查报告（M5，`report/`，`.[report]` extra）**：结论摘要 → 问题清单（分级）→ 待人工确认（独立成节）→ 证据表 → 整改建议 → 审查员签署栏 → 免责声明；LLM 参与标注（`card.llm_assisted`）写入报告；rels 零外部链接（`check --report out.docx`）
 - **Web 面板（M5，`webapp/`，`.[web]` extra）**：FastAPI + 零依赖内联单页（vanilla JS，无构建/无 vendor），页面 0 外链断网可演示，`docs_url/redoc_url` 显式关闭；`flcheck web` 一条命令起服务，multipart 上传或粘贴文本 → 完整审查 JSON
-- CLI（`flcheck check / parse / gen / bench / web`，`check --format json|table`、`--report out.docx`）、CI（{ubuntu, windows} × {3.8, 3.11}）、全离线 pytest（189 项，extras 覆盖守门：pyproject 可选依赖必须覆盖运行期+测试期 import）
+- CLI（`flcheck check / parse / gen / bench / web`，`check --format json|table`、`--report out.docx`）、CI（{ubuntu, windows} × {3.8, 3.11}）、全离线 pytest（191 项，extras 覆盖守门 + 平台兼容守门：pyproject 可选依赖必须覆盖运行期+测试期 import、strftime 禁非 ASCII 格式串、open 强制显式编码）
 
-**规划中（按里程碑）**
+**已发布（M6）**
 
-- M6 脱敏发布 GitHub + 收尾固化（tag/release/topics）
+- v0.6.0（2026-10-04）：脱敏四步复核+历史三扫全 0、干净环境验证（本地 clone+全新 venv 逐字跑通、收集数对照）、GitHub 建仓推送（SSH）+ tag + release + topics；发布实录见 [plan/RELEASE-M6.md](plan/RELEASE-M6.md)
 
 ## 架构
 

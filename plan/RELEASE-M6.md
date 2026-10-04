@@ -51,11 +51,13 @@
 - [x] `gh release create v0.6.0 --notes-file <md>`（评测表数值 + 演示命令摘要 + extras 说明 + 免责声明）
 - [x] topics：`gh repo edit --add-topic`（小写连字符）+ `gh api` 回读确认
 
-## 7. 发布后复核（发布后回填）
+## 7. 发布后复核（已回填 2026-10-04）
 
-- [x] GitHub 全新 clone → 全量 pytest 189 全绿（3 批）+ bench parse/e2e 退出码 0 + 历史三扫 0
-- [x] `gh run list` CI 轮数与 push 次数对账
-- [x] 干净环境临时 clone/venv 与全部临时产物已删除
+- **CI 事件实录**：首推即暴露 windows-latest 两作业 `UnicodeEncodeError`——`datagen/templates.py`/`injectors.py` 共 5 处 `strftime("%Y年…")`：Windows 的 strftime 按 locale（ANSI 代码页）编码格式串，CI 的 cp1252 编不了"年"；Ubuntu glibc 直通字节、本机 GBK 可编中文，两环境均测不出（"dev 绿 CI 挂"环境差异型；西文 Windows 用户跑 `flcheck gen` 同样会崩，修代码不修 CI 环境）。修复=e98d53c：`datagen.templates.fmt_cn_date` 手工格式化（输出逐字节一致，冻结集复现守门通过，DATAGEN_VERSION 不动）+ `tests/test_platform_guard.py` AST 双守门（src 禁 strftime 非 ASCII 格式串；src+tests 内建 open 强制 encoding=/二进制）。修复后 CI 四矩阵（ubuntu/windows × 3.8/3.11）全绿。
+- **tag 迁移**：v0.6.0 初打在 CI 红的收尾提交上（发布后数分钟内、零消费者）→ 删 release+远端/本地 tag → 重打在含本节回填的收尾提交 → 重建 release（notes 增补 CI 全绿口径）。
+- **GitHub 真实 clone 复核**：clone 修复提交 + 全新 venv → 收集数 **191**=dev、全量 **191 全绿**（69+70+52 分批）、bench parse/e2e 退出码 0、历史三扫全 0。
+- **CI 对账**：push 4 次=run 4 次（修复前 main×2 与旧 tag 共 3 次失败=同一 strftime 根因、修复后 main 成功）；tag 重打后随 push/tag 各再触发 1 次，全绿——对账一致。
+- 干净环境验证与发布后复核用的临时 clone/venv（工作区同级两处）及全部临时产物已删除。
 
 ## 8. D15 处置（plan/06 缓议项，经用户确认）
 

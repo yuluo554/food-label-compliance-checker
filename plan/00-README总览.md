@@ -20,7 +20,8 @@
 | HANDOFF-M3.md | 跨会话交接快照（M2 收尾，已过时仅作历史） | ✅ 2026-10-04 |
 | HANDOFF-M4.md | 跨会话交接快照（M3 收尾，已过时仅作历史） | ✅ 2026-10-04 |
 | HANDOFF-M5.md | 跨会话交接快照（M4 收尾，已过时仅作历史） | ✅ 2026-10-04 |
-| HANDOFF-M6.md | 跨会话交接快照（M5 收尾，当前有效） | ✅ 2026-10-04 |
+| HANDOFF-M6.md | 跨会话交接快照（M5 收尾，已过时仅作历史） | ✅ 2026-10-04 |
+| HANDOFF-FINAL.md | 项目终态快照（M6 收尾 + 发布完成，无后续里程碑） | ✅ 2026-10-04 |
 
 ## 决策记录
 
@@ -34,4 +35,4 @@
 - **M3 知识与规则 ✅（2026-10-04）**：四部标准条文块入库（428 块，块号=条款号，`tools/build_blocks.py` 可复现切分 + 守门测试）；双标尺规则集扩库 2011×21 + 2025×24 = 45 条（DoD ≥40），全部挂条文块 quote_ref、status=已核对；9 种 check_type 引擎全通（含 conditional 豁免分支、行级多结论、not_run 语义）；数值复算引擎（NRV%/能量折算/声称阈值/日期逻辑，系数挂 2025 §2.3，D20 补录 2011 无对应条款）；门控词表定稿并对全类型回归；冻结集 12 样本双标尺全量对账（干净零不合规、注入精确命中）+ dual_diff 对照回归；pytest 113 项全绿
 - **M4 基准与 LLM 兜底 ✅（2026-10-04）**：内置基准 `flcheck bench parse`（冻结集字段级 **F1=1.0**，TP=253/FP=0/FN=0，门槛 ≥0.95）与 `flcheck bench e2e`（**检出率 1.0（9/9）、误报 0**、dual_diff 零违例），评测器迁入 src（对账口径=D16 全部非 pass 集合，D21 等价迁移）；LLM 兜底适配器（默认关闭，quote⊆原文逐字校验+值从摘录重解析，不可达自动降级，25 项 mock 测试零真实 API）；M3 推迟项联动落地（D22）：2025 规则集 26 条共 47 条（+NUTR-ROWS-01 营养行完整性、+ALLERGEN-01 致敏物质提示，均挂条文块）、check_type 11 种、DATAGEN_VERSION 1→2 冻结集重生成；行在值不可析转"待人工确认"降级语义；pytest 159 项全绿
 - **M5 编排与交付 ✅（2026-10-04）**：pipeline 状态机（节点 load_input→parse→llm 兜底→run_ruleset×N→merge+diff→emit，每节点耗时+状态随 `pipeline.nodes` 返回，规则类失败降级为该规则集结果缺失+`warnings` 警告不吞异常）；docx 审查报告（七节结构、待人工确认独立成节、rels 零外链、LLM 参与标注，`check --report`）；Web 面板（FastAPI 零依赖内联单页、页面 0 外链断网可演示、docs/redoc 关闭、multipart 上传→完整 JSON，真实 uvicorn+urllib 上传冒烟实测）；CLI 收口（`check --format table`、`--report out.docx`、`flcheck web` 落地）；extras 守门测试（pyproject 可选依赖静态断言覆盖运行期+测试期 import，缺依赖优雅降级退出码 2，D23）；bench 复跑零回退（F1=1.0/误报 0）；pytest 189 项全绿
-- **M6 脱敏发布 + 收尾固化 ✅（2026-10-04）**：脱敏四步复核（106 跟踪文件清单核对/11 类模式内容级扫描/4 部 PDF sha256 对台账/filter-branch 全历史重写清 HANDOFF 个人路径）+ 提交元数据全 noreply + 历史终验三扫全 0（阳性对照前置，`tools/scan_sensitive.py` 入仓可复跑）+ 干净环境验证（本地 clone+全新 venv，README 逐字跑通，pytest 收集数 **189=dev**、全量 **189 全绿**、全链 demo 全 0）+ GitHub 建仓推送（SSH 一次成，D12）+ tag v0.6.0 + release + topics（逐项留档 [RELEASE-M6.md](RELEASE-M6.md)；D15 经用户确认不投赛事）
+- **M6 脱敏发布 + 收尾固化 ✅（2026-10-04）**：脱敏四步复核（106 跟踪文件清单核对/11 类模式内容级扫描/4 部 PDF sha256 对台账/filter-branch 全历史重写清 HANDOFF 个人路径）+ 提交元数据全 noreply + 历史终验三扫全 0（阳性对照前置，`tools/scan_sensitive.py` 入仓可复跑）+ 干净环境验证（本地 clone+全新 venv，README 逐字跑通，pytest 收集数对照一致、全量全绿、全链 demo 全 0）+ GitHub 建仓推送（SSH 一次成，D12）+ CI Windows cp1252 事件修复（strftime 中文格式串→fmt_cn_date + `test_platform_guard.py` 双守门，四矩阵绿）+ tag v0.6.0 + release + topics（逐项留档 [RELEASE-M6.md](RELEASE-M6.md)；D15 经用户确认不投赛事）
