@@ -70,7 +70,9 @@ def _production_date(rng: random.Random) -> date:
     return date(GENERATION_YEAR, rng.randint(1, 12), rng.randint(1, 28))
 
 
-def _build_sample(rng_key: str, kind: str, cat: str, vtype: Optional[str]) -> Tuple[Dict[str, Any], str]:
+def _build_sample(
+    rng_key: str, kind: str, cat: str, vtype: Optional[str]
+) -> Tuple[Dict[str, Any], str, LabelState]:
     rng = random.Random(rng_key)
     t = _pick_template(rng, cat, vtype)
     state: LabelState = initial_state(t, _production_date(rng))
@@ -99,13 +101,19 @@ def _build_sample(rng_key: str, kind: str, cat: str, vtype: Optional[str]) -> Tu
         "clean_baseline": kind == "clean",
         "injections": entries,
     }
-    return sample, render_label(state)
+    return sample, render_label(state), state
 
 
-def generate_dataset(
+def generate_dataset_with_states(
     seed: int, n: int, categories: Optional[List[str]] = None
-) -> Tuple[Dict[str, Any], Dict[str, str]]:
-    """生成数据集：返回 (truth_dict, {文件名: 标签文本})。纯函数，无副作用。"""
+) -> Tuple[Dict[str, Any], Dict[str, str], List[LabelState]]:
+    """generate_dataset 超集：额外按样本顺序返回 LabelState。
+
+    M2 起解析层评测（F1）用 State 重建参数卡期望值——期望只能来自生成器的
+    构造知识，不能从语料文本反向提取（与被测解析器循环论证）。状态对象不
+    消耗随机数，truth/texts 输出与 generate_dataset 位级一致；与冻结 fixtures
+    的位级一致性由 tests/test_datagen_repro.py 守门。
+    """
     cats = categories if categories else list(CATEGORY_TEMPLATES)
     plans = _plan_samples(n, cats)
     truth: Dict[str, Any] = {
@@ -117,13 +125,23 @@ def generate_dataset(
         "samples": [],
     }
     texts: Dict[str, str] = {}
+    states: List[LabelState] = []
     for idx, (kind, cat, vtype) in enumerate(plans):
-        sample, text = _build_sample(f"{seed}:{idx}", kind, cat, vtype)
+        sample, text, state = _build_sample(f"{seed}:{idx}", kind, cat, vtype)
         sample["sample_id"] = f"sample-{idx + 1:04d}"
         sample["file"] = f"{sample['sample_id']}-{sample['template']}.txt"
         sample["seed"] = seed
         truth["samples"].append(sample)
         texts[sample["file"]] = text
+        states.append(state)
+    return truth, texts, states
+
+
+def generate_dataset(
+    seed: int, n: int, categories: Optional[List[str]] = None
+) -> Tuple[Dict[str, Any], Dict[str, str]]:
+    """生成数据集：返回 (truth_dict, {文件名: 标签文本})。纯函数，无副作用。"""
+    truth, texts, _ = generate_dataset_with_states(seed, n, categories)
     return truth, texts
 
 

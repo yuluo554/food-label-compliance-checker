@@ -94,6 +94,18 @@
 """
 from __future__ import annotations
 
-from .generator import DATAGEN_VERSION, dataset_to_json, generate_dataset, write_dataset
+from .generator import (
+    DATAGEN_VERSION,
+    dataset_to_json,
+    generate_dataset,
+    generate_dataset_with_states,
+    write_dataset,
+)
 
-__all__ = ["DATAGEN_VERSION", "dataset_to_json", "generate_dataset", "write_dataset"]
+__all__ = [
+    "DATAGEN_VERSION",
+    "dataset_to_json",
+    "generate_dataset",
+    "generate_dataset_with_states",
+    "write_dataset",
+]

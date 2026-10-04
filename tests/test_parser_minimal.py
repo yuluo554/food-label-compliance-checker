@@ -1,6 +1,7 @@
-"""最小文本解析器回归测试。
+"""文本解析器最小回归测试。
 
 关键性质：证据 quote 必须是输入文本的逐字子串（防幻觉硬校验）。
+全字段值回归与 F1 自测见 test_parser_frozen.py；字段级变体见 test_parser_fields.py。
 """
 from food_label_checker.parser import parse_label
 
@@ -12,7 +13,10 @@ def test_parse_mini_label_fields():
     assert card.get("food_name").value == "牧云 发酵乳"
     net = card.get("net_content")
     assert net.value == {"amount": 250.0, "unit": "mL"}
-    assert card.get("production_date").value == "2026年09月20日"
+    # M2 契约：日期字段 value=ISO，原样标示文本在 evidence.quote（见 plan/06 D19）
+    prod = card.get("production_date")
+    assert prod.value == "2026-09-20"
+    assert prod.evidence.quote == "2026年09月20日"
 
 
 def test_evidence_quote_is_literal_substring():
@@ -32,8 +36,13 @@ def test_missing_mandatory_lines_go_unresolved(sample_text):
     assert card.has("production_date")
 
 
-def test_unparsed_hint_lines_collected(sample_text):
+def test_former_hint_lines_now_parsed(sample_text):
+    """M0 骨架期这些行只进 unresolved 提示，M2 起全字段解析到位。"""
     card = parse_label(sample_text)
-    joined = "\n".join(card.unresolved)
-    for hint in ("配料", "保质期", "贮存", "许可证"):
-        assert hint in joined
+    assert card.has("ingredients")
+    assert card.has("shelf_life")
+    assert card.has("storage_conditions")
+    assert card.has("sc_license")
+    assert card.has("producer_name")
+    assert card.has("product_standard")
+    assert not any("待 M2 解析" in item for item in card.unresolved)
