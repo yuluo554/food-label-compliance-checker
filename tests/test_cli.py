@@ -4,6 +4,7 @@ import json
 
 import pytest
 
+from food_label_checker import __version__
 from food_label_checker.cli import main
 
 
@@ -11,7 +12,10 @@ def test_version_flag(capsys):
     with pytest.raises(SystemExit) as exc:
         main(["--version"])
     assert exc.value.code == 0
-    assert "flcheck" in capsys.readouterr().out
+    out = capsys.readouterr().out
+    assert "flcheck" in out
+    # D12：只断言 "flcheck" 时，--version 输出任何版本号都能过；必须比对实际版本
+    assert __version__ in out, f"--version 输出未含 __version__={__version__!r}：{out!r}"
 
 
 def test_no_command_prints_help_exit_2(capsys):

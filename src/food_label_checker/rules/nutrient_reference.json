@@ -7,7 +7,10 @@
     "clause": "NRV：2011 附录A 表A.1、2025 附录A 表A.1；能量系数：2025 §2.3（2011 版无对应条款，D20）；NRV% 修约间隔 1：2011 A.2 / 2025 A.3.2；盐油糖提示语：2025 §4.5",
     "channel": "食品安全国家标准数据检索平台 sppt.cfsa.net.cn（官方，2026-10-04 下载）",
     "quote_ref": "gb28050-2011.json#A.1 / gb28050-2025.json#A.1 / gb28050-2025.json#2.3",
-    "status": "已核对"
+    "status": "已核对",
+    "reviewed_at": "2026-10-04",
+    "next_review": "2027-10-04",
+    "review_note": "GB 28050-2025 于 2027-03-16 强制实施；复核安排在实施后约 7 个月（年度节奏），届时核对本文 §2.3 / 表A.1 / 表C.1 / §4.5 与实施版是否一致"
   },
   "nrv": {
     "能量": { "value": 8400, "unit": "kJ", "status": "已核对", "note": "2011/2025 表A.1 同值" },
@@ -32,8 +35,12 @@
   "rounding": {
     "nrv_percent_step": "NRV% 修约间隔为 1（2011 A.2 / 2025 A.3.2，已核对）",
     "amount_step": "含量修约间隔按各版表1（能量 1、蛋白/脂肪/碳水/糖 0.1、钠 1，已核对）",
-    "general_rule": "数值修约总则（GB/T 8170 四舍六入五成双）条款未单独核对，生成器 round()（half-even）与修约间隔 1 的组合在基准数据上等效",
-    "status": "已核对"
+    "general_rule": "例外声明：数值修约总则（GB/T 8170，四舍六入五成双）的条款本身未单独核对。本条 status=已核对 只覆盖 nrv_percent_step 与 amount_step 两项（NRV% 修约间隔、各版表1 含量修约间隔），不覆盖 GB/T 8170 总则。生成器用 round()（half-even）配合修约间隔 1，在基准数据上与『四舍六入五成双』等效，但该等效性未经 GB/T 8170 原文核对。",
+    "status": "已核对",
+    "status_scope": "仅 NRV% 修约间隔与含量修约间隔（nrv_percent_step / amount_step）；不含 general_rule 所述的 GB/T 8170 总则条款",
+    "open_item": "GB/T 8170 数值修约总则条款核对",
+    "reviewed_at": "2026-10-04",
+    "next_review": "2027-10-04"
   },
   "no_nrv_nutrients": ["糖"],
   "no_nrv_note": "两版表A.1 均未设糖 NRV；未规定 NRV 的成分不做 NRV% 计算（2025 A.3.2），标示用横线/空白的表达见 2025 B.5。已核对。",

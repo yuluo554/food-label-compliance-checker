@@ -16,9 +16,14 @@ from food_label_checker.bench.parse_eval import (
     resolve_bench_data,
 )
 from food_label_checker.cli import main
+from food_label_checker.datagen import generate_dataset, write_dataset
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 FROZEN_DIR = REPO_ROOT / "data" / "generated" / "frozen" / "seed-2026-n12"
+
+# 跨 seed 守门用的种子表（D5）：冻结集只钉住 seed=2026，单点达标不代表任意
+# seed 达标。DEC-1=A 之前，15 个种子里有 11 个检出率掉到 0.875~0.9。
+CROSS_SEEDS = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 42, 99, 2026)
 
 
 def test_bench_parse_gate_on_frozen():
@@ -42,6 +47,26 @@ def test_bench_e2e_gate_on_frozen():
     assert metrics["manual_findings_info_only"] == 0
     assert metrics["covered_instances"] == metrics["fail_instances"]
     assert metrics["main_expect_total"] > 0
+
+
+def test_bench_e2e_gate_across_seeds(tmp_path):
+    """D5 回归：任意 seed 生成的数据集都必须满足 e2e 门槛，不只是冻结集那个 seed。
+
+    冻结集只覆盖 seed=2026。DEC-1=A 之前 beverage-tea 模板声明支持 V6，而规则
+    ING-ORDER-01 的 only_if 不覆盖茶饮料品名 → 门控 skipped → 注入真值检不出，
+    15 个种子里 11 个掉到 0.875~0.9。本测试把「任意 seed 达标」变成可机判事实。
+    """
+    failures = []
+    for seed in CROSS_SEEDS:
+        truth, texts = generate_dataset(seed, 12)
+        data_dir = write_dataset(truth, texts, tmp_path)
+        metrics, issues = evaluate_e2e(data_dir=data_dir)
+        if issues or metrics["detection_rate"] != 1.0 or metrics["false_positives"] != 0:
+            failures.append(
+                f"seed={seed} detection_rate={metrics['detection_rate']} "
+                f"false_positives={metrics['false_positives']} issues={issues[:3]}"
+            )
+    assert not failures, "\n".join(failures)
 
 
 def test_bench_missing_data_exit_2(capsys):

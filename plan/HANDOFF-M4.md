@@ -8,7 +8,7 @@
 - 包 `food_label_checker` v0.4.0，CLI `flcheck`；pytest **113 项全绿**（1.1s 全离线）
 - **M3 交付**（知识与规则，双标尺核心）：
   - **条文块知识库**：`data/knowledge/blocks/` 四部标准 **428 块**（7718-2011×114 / 7718-2025×129 / 28050-2011×83 / 28050-2025×102），块号=条款号，`tools/build_blocks.py` 从 PDF 提取文本（`raw/_extracted/` 随仓）可复现切分；tests/test_blocks.py 守门（含关键数值条款去空白口径挂原文 + PDF sha256 一致性）
-  - **规则集扩库 45 条**（DoD ≥40）：gb7718-2011×21 + gb7718-2025×24（含 2025 新增：MAND-EXPIRY-01 到期日、SALT-NOTICE-01 盐油糖提示语、CLAIM-ZEROADD-01 "不添加"类受限声称）；全部 `basis.quote_ref` 挂条文块、status=已核对；D16 契约 rule_id 齐全且 2011 无 CLAIM-ZEROADD（豁免契约）
+  - **规则集扩库 45 条**（DoD ≥40）：gb7718-2011×21 + gb7718-2025×24（含 2025 新增：MAND-EXPIRY-01 到期日、SALT-NOTICE-01 盐油糖提示语、CLAIM-ZEROADD-01 "不添加"类受限声称）；全部 `basis.quote_ref` 挂条文块、status=已核对；D16 契约 rule_id 齐全且 2011 无 CLAIM-ZEROADD（豁免契约）（**2026-10-21 二次迭代注：M4 追加成果已扩至 2025×26 共 47 条，见下「追加成果」行与 plan/05 M4 段**）
   - **9 种 check_type 引擎全通**：mandatory_field / format / nrv_recalc / energy_consistency / ingredient_order / claim_threshold / claim_whitelist / date_logic / conditional；处理器返回 Finding 列表（行级多结论）、None=not_run（前置缺失不产结论）；stats：pass+fail+manual==结论数、checked+skipped+not_run==规则总数；未知类型仍转"待人工确认"
   - **数值复算引擎 `numeric/`**：NRV% 复算（修约间隔 1，容差 ±1）、能量折算（17/37/17，表2 低报方向：复算 >120%×标示+1kJ 判矛盾）、声称阈值（无糖 ≤0.5/低糖 ≤5/低钠 ≤120，机器可读表 `nutrient_reference.claim_thresholds`）、日期逻辑（到期日=生产+保质期，**共用 datagen.templates.compute_expiry**）；系数挂 GB 28050-2025 §2.3（D20：2011 全文确认无对应条款）
   - **conditional 豁免分支**：字段缺失时按 params 判定——manual_if_any（酒类）→待人工、exempt_if_any（食醋/食用盐/味精/固态食糖[/葡萄酒]）→豁免通过（2025 到期日豁免要求生产日期在场）、否则不合规
@@ -54,11 +54,11 @@
 ## 5. M3 DoD 对照（逐项）
 
 - [x] 四部标准条文块入库（挂出处）：428 块 + tests/test_blocks.py 守门（结构/sha256/关键数值挂原文/quote_ref 可解析）
-- [x] 规则集 2011/2025 双版本 JSON：21+24=45 条 ≥40，全部挂 quote_ref、status=已核对；D16 契约 id 齐全（含 2011 无 CLAIM-ZEROADD 断言）
+- [x] 规则集 2011/2025 双版本 JSON：21+24=45 条 ≥40，全部挂 quote_ref、status=已核对；D16 契约 id 齐全（含 2011 无 CLAIM-ZEROADD 断言）（**2026-10-21 二次迭代注：已扩至 21+26=47 条，下同**）
 - [x] 9 种 check_type 引擎全通：conditional 含豁免/人工分支；未知类型转"待人工确认"（测试锁定）
 - [x] 类目门控生效（含 conditional 分支）且回归测试锁定：tests/test_engine_m3.py 门控词表用例
 - [x] 数值复算引擎全通、系数挂出处：numeric/ 四类复算 + 单元测试；系数/阈值/误差全部挂条文块原文（D20）
-- [x] 每条 finding 挂依据，待核对项自动标注：flagged_pending_basis==（status≠已核对）测试锁定；当前 45 条全部已核对
+- [x] 每条 finding 挂依据，待核对项自动标注：flagged_pending_basis==（status≠已核对）测试锁定；当前 45 条全部已核对（**2026-10-21 二次迭代注：现为 47 条，全部已核对**）
 - [x] 演示物：`flcheck check sample.txt --ruleset both` 双标尺对照 + dual_diff（README 示例输出已更新为实测值）
 
 ## 6. 关键命令速查

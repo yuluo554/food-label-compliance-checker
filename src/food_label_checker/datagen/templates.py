@@ -95,7 +95,11 @@ TEMPLATES: List[Template] = [
         nutrients={"蛋白质": 0.2, "脂肪": 0, "饱和脂肪": 0, "碳水化合物": 4.5, "糖": 4.2, "钠": 15},
         storage="常温避光保存，开启后需冷藏并尽快饮用", shelf_value=12, shelf_unit="个月",
         allergen_notice="致敏物质提示：本生产线同时加工含乳、大豆制品。",
-        v_supported=("V1", "V2", "V3", "V4", "V5", "V6", "V7", "V8"),
+        # beverage-tea 不支持 V6（配料递减序注入）：规则 ING-ORDER-01 的 only_if=["果汁饮料"]
+        # 不覆盖"柠檬味红茶饮料"这一品名 → 门控不命中、规则被 skipped → 注入的真值
+        # main_expect 永远检不出。声明支持 V6 会让 bench e2e 的 detection_rate 变成
+        # "只在抽取到 beverage-juice 的种子上成立"的假象（D1 / DEC-1=A）。
+        v_supported=("V1", "V2", "V3", "V4", "V5", "V7", "V8"),
     ),
     Template(
         key="bakery-bread", category="烘焙", name="早餐切片面包", brand="禾序",

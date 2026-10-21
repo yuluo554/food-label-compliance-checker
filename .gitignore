@@ -5,6 +5,9 @@ __pycache__/
 .venv/
 venv/
 .pytest_cache/
+# 构建产物（`pip install -e .` / `python -m build` 会在仓内生成）
+build/
+dist/
 
 # 环境与密钥
 .env
@@ -15,6 +18,9 @@ venv/
 output/
 reports/
 *.log
+
+# 二次迭代交接物（诊断/路线/提示词/执行记录）：含本机绝对路径，不入公共仓
+update/
 
 # 系统文件
 Thumbs.db

@@ -1,24 +1,26 @@
 [build-system]
-requires = ["setuptools>=61"]
+# PEP 639（license 用 SPDX 表达式 + license-files）要求 setuptools>=77；
+# 而 setuptools>=77 自身要求 Python>=3.9 —— 故「PEP 639 + >=3.8」不可兼得。
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
+# 发布形态：只发 wheel；sdist 仅供源码阅读，不含 data/ 与 tests/conftest.py，
+# 自带测试不可跑（见 README「开发」段）。
 [project]
 name = "food-label-compliance-checker"
-version = "0.6.0"
+version = "0.7.0"
 description = "预包装食品标签合规智能审查系统：GB 7718-2011/2025 双标尺规则引擎，内置可复现评测基准"
 readme = "README.md"
-requires-python = ">=3.8"
-license = { text = "MIT" }
+requires-python = ">=3.12"
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [{ name = "yuluo554" }]
 keywords = ["food-label", "gb7718", "gb28050", "compliance", "nutrition-label", "food-safety"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Food Industry",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Information Analysis",
 ]

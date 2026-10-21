@@ -2,7 +2,7 @@
 
 预包装食品标签合规智能审查系统——面向 GB 7718/GB 28050 换版期（新版标准 2025-03-27 发布、2027-03-16 强制实施）的标签审查开源工具：把文本标签解析为结构化"参数卡"，用**双标尺规则引擎**分别按 GB 7718-2011（现行）与 GB 7718-2025（过渡期）审查，输出"现行合规 / 新规不合规"对照，每条结论挂标准条款出处与标签原文证据。
 
-> **项目状态：✅ v0.6.0 已公开发布**（[Release](https://github.com/yuluo554/food-label-compliance-checker/releases/tag/v0.6.0)，M0–M6 全量交付，发布门实录见 [plan/RELEASE-M6.md](plan/RELEASE-M6.md)）。垂直切片、**合成标签生成器**（固定 seed 位级复现 + V1–V8 违规注入真值）、**全量文本解析**（参数卡全字段 + 逐字证据）、**全量双标尺规则引擎**（47 条规则挂官方原文、11 种检查类型、数值复算）、**内置评测基准**（`flcheck bench`，解析 F1=1.0 / 误报 0）、**LLM 兜底适配器**（默认关闭，quote 逐字校验防幻觉）与**交付形态**（pipeline 状态机 / docx 审查报告 / Web 面板）均已真实可跑并经干净环境验证；条文块知识库（四部标准 428 块）已入库挂出处。规划中的能力见下文"特性"，**请勿将未标注"已实现"的内容当作可用功能**。
+> **项目状态：✅ v0.7.0 已公开发布**（[Release](https://github.com/yuluo554/food-label-compliance-checker/releases/tag/v0.7.0)，M0–M6 全量交付 + 二次迭代，发布门实录见 [plan/RELEASE-M6.md](plan/RELEASE-M6.md)）。垂直切片、**合成标签生成器**（固定 seed 位级复现 + V1–V8 违规注入真值）、**全量文本解析**（参数卡全字段 + 逐字证据）、**全量双标尺规则引擎**（47 条规则挂官方原文、11 种检查类型、数值复算）、**内置评测基准**（`flcheck bench`，解析 F1=1.0 / 误报 0 / **15 个 seed 检出率全 1.0**）、**LLM 兜底适配器**（默认关闭，quote 逐字校验防幻觉）与**交付形态**（pipeline 状态机 / docx 审查报告 / Web 面板）均已真实可跑并经干净环境验证；条文块知识库（四部标准 428 块）已入库挂出处。规划中的能力见下文"特性"，**请勿将未标注"已实现"的内容当作可用功能**。
 
 ## 特性
 
@@ -21,10 +21,11 @@
 - **pipeline 状态机（M5）**：`load_input → parse → llm 兜底（可选）→ run_ruleset×N → merge+diff → emit`，每节点记录耗时与状态（`pipeline.nodes`），降级节点汇入 `warnings`；输入类失败明确报错退出（退出码 2），规则类失败降级为该规则集结果缺失+警告，不吞异常
 - **docx 审查报告（M5，`report/`，`.[report]` extra）**：结论摘要 → 问题清单（分级）→ 待人工确认（独立成节）→ 证据表 → 整改建议 → 审查员签署栏 → 免责声明；LLM 参与标注（`card.llm_assisted`）写入报告；rels 零外部链接（`check --report out.docx`）
 - **Web 面板（M5，`webapp/`，`.[web]` extra）**：FastAPI + 零依赖内联单页（vanilla JS，无构建/无 vendor），页面 0 外链断网可演示，`docs_url/redoc_url` 显式关闭；`flcheck web` 一条命令起服务，multipart 上传或粘贴文本 → 完整审查 JSON
-- CLI（`flcheck check / parse / gen / bench / web`，`check --format json|table`、`--report out.docx`）、CI（{ubuntu, windows} × {3.8, 3.11}）、全离线 pytest（191 项，extras 覆盖守门 + 平台兼容守门：pyproject 可选依赖必须覆盖运行期+测试期 import、strftime 禁非 ASCII 格式串、open 强制显式编码）
+- CLI（`flcheck check / parse / gen / bench / web`，`check --format json|table`、`--report out.docx`）、CI（{ubuntu, windows} × {3.12}）、全离线 pytest（198 项，extras 覆盖守门 + 平台兼容守门：pyproject 可选依赖必须覆盖运行期+测试期 import、strftime 禁非 ASCII 格式串、open 强制显式编码）+ 四条自指守门（版本号单一来源 / 跨 seed bench / 复核锚 / README 计数）
 
-**已发布（M6）**
+**已发布（M6 / v0.7.0）**
 
+- v0.7.0（2026-10-21）：二次迭代——跨 seed bench 守门（15 seed 检出率全 1.0）、Python floor 3.8→3.12 + PEP 639 元数据、CI {ubuntu,windows}×3.12 + actions v7、规则条数口径统一为 47 条、复核锚（`reviewed_at`/`next_review`）、版本号单一来源守门、`build/`+`dist/` 入 `.gitignore`
 - v0.6.0（2026-10-04）：脱敏四步复核+历史三扫全 0、干净环境验证（本地 clone+全新 venv 逐字跑通、收集数对照）、GitHub 建仓推送（SSH）+ tag + release + topics；发布实录见 [plan/RELEASE-M6.md](plan/RELEASE-M6.md)
 
 ## 架构
@@ -145,6 +146,8 @@ flcheck bench parse && flcheck bench e2e
 
 对账口径（D16/D21）：按"全部非 pass（不合规）集合"对账——真值每项主期望至少被一把标尺检出（检出率），标尺每个不合规结论必须被真值覆盖（误报）；also_expect 的 present_in/absent_in 按字面执行；"待人工确认"不参与对账；干净样本承诺两把标尺零不合规。评测器实现：`src/food_label_checker/bench/`。
 
+**跨 seed 保证**（v0.7.0 起）：上述 1.0 / 0 不是冻结集 seed=2026 的专属属性。`tests/test_bench.py::test_bench_e2e_gate_across_seeds` 对 seed `1,2,…,12,42,99,2026` 共 15 个种子逐个 `gen` + `bench e2e`，断言 `detection_rate == 1.0`、`false_positives == 0`、`issues` 为空。v0.6.0 之前 beverage-tea 模板声明支持 V6（配料递减序），而规则 `ING-ORDER-01` 的 `only_if=["果汁饮料"]` 不覆盖茶饮料品名 → 门控 skipped → 注入真值永远检不出，15 个种子里 11 个检出率掉到 0.875~0.9；v0.7.0 去掉该模板的 V6 声明（生成器声明与规则可判定性对齐），V6 覆盖保留在 beverage-juice / dairy-fermented / bakery-bread / bakery-biscuit / condiment-* 五个模板上。
+
 ## 项目结构
 
 ```
@@ -183,6 +186,10 @@ flcheck bench parse && flcheck bench e2e
 python -m pip install -e ".[dev,web,report]"
 pytest -q
 ```
+
+**支持的 Python 版本：3.12**（`requires-python = ">=3.12"`，CI 跑 {ubuntu, windows} × {3.12}）。v0.7.0 起不再支持 3.8~3.11：3.8 已于 2024-10 EOL，且当前生态的 extras（fastapi / uvicorn / python-multipart / pytest / python-docx）最新线集体要求 ≥3.10，3.8 上只能解析到三年前的分支；同时 PEP 639 元数据（`license` 用 SPDX 表达式）要求 `setuptools>=77`，而 `setuptools>=77` 要求 Python ≥3.9，两者不可兼得。extras 无版本上限，在 3.12 上会解析到最新线（实测 fastapi 0.156.x / uvicorn 0.54.x / python-docx 1.2.x / pytest 9.x / starlette 1.x）。
+
+**发布形态：只发 wheel**。sdist 仅供源码阅读，不含 `data/` 与 `tests/conftest.py`，自带测试不可跑（`data/` 是四部国标 PDF 与条文块，体积 1.35 MB，不塞进源码包）。要跑测试请从仓库 clone 按上面三行安装。
 
 计划文档（题目定义/需求/架构/详设/里程碑/决策记录）见 [plan/00-README总览.md](plan/00-README总览.md)。
 
