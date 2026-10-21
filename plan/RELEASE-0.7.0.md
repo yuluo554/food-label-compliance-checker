@@ -195,8 +195,9 @@ py -3.12 -m venv .venv && .venv/Scripts/python.exe -m pip install -U pip
 
 | run | head | 触发 | 结论 |
 |---|---|---|---|
-| `39623552294` | `e6e5896` | push main | **success** |
+| `39623552294` | `e6e5896` | push main（代码提交） | **success** |
 | `39623810607` | `e6e5896` | push tag `v0.7.0` | **success** |
+| `39625845696` | `6410ff5` | push main（收尾回写提交） | **success** |
 
 job：
 | job id | name | conclusion | 注解 |
@@ -205,9 +206,13 @@ job：
 | `119302960592` | `test (windows-latest, 3.12)` | success | **0 条** |
 | `119303881273` | `test (ubuntu-latest, 3.12)`（tag run） | success | 1 条（同上 notice） |
 | `119303880887` | `test (windows-latest, 3.12)`（tag run） | success | **0 条** |
+| `119310748837` | `test (ubuntu-latest, 3.12)`（回写 run） | success | 1 条（同上 notice） |
+| `119310749135` | `test (windows-latest, 3.12)`（回写 run） | success | **0 条** |
 
 日志实测：ubuntu `198 passed` / windows `198 passed`，两腿 `flcheck 0.7.0`。
 **Node20 弃用注解 0 条**（改前 checkout@v4 腿有 1 条）。腿数 4 → 2。
+
+> 回写提交 `6410ff5` 只改 `plan/` 与 `README.md`（不动代码），CI 仍完整跑一遍并绿——顺带证明回写没破坏任何东西。**这三次 run 都要看**：判「CI 没触发」的标准是 `actions/runs?head_sha=<sha>` 的 `total_count` 变 1（本轮又出现约 4 分钟的延迟，见 §8 坑 2）。
 
 ## 7. 发布（DEC-4=B）
 
@@ -287,4 +292,4 @@ SDIST: files  release=64 tag=64 only_release=[] only_tag=[] content_diff=[]    �
 2. **跨 seed**：自己跑 15 个 seed；**并且**做一次负控（把 `"V6"` 塞回 `beverage-tea`），确认新守门会红
 3. **干净环境**：从 GitHub clone + 全新 venv（别用本机已有 venv），跑 `pytest -q` 与五条命令；确认 `update/` 不在仓里
 4. **发布件**：从 Release **真下载**三个附件，`sha256sum -c SHA256SUMS`，再装 wheel 跑业务命令
-5. **CI**：给 §6 列出的 4 个 job 各查一次 annotations，确认 **Node20 弃用 0 条**；核对 job 名里的 Python 版本是 `3.12`、腿数是 2（不是 4）
+5. **CI**：给 §6 列出的 6 个 job 各查一次 annotations，确认 **Node20 弃用 0 条**；核对 job 名里的 Python 版本是 `3.12`、腿数是 2（不是 4）。三个 run 是 push main（代码）、push tag、push main（收尾回写），**都要看**。
