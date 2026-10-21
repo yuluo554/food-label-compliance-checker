@@ -2,7 +2,7 @@
 
 预包装食品标签合规智能审查系统——面向 GB 7718/GB 28050 换版期（新版标准 2025-03-27 发布、2027-03-16 强制实施）的标签审查开源工具：把文本标签解析为结构化"参数卡"，用**双标尺规则引擎**分别按 GB 7718-2011（现行）与 GB 7718-2025（过渡期）审查，输出"现行合规 / 新规不合规"对照，每条结论挂标准条款出处与标签原文证据。
 
-> **项目状态：✅ v0.7.0 已公开发布**（[Release](https://github.com/yuluo554/food-label-compliance-checker/releases/tag/v0.7.0)，M0–M6 全量交付 + 二次迭代，发布门实录见 [plan/RELEASE-M6.md](plan/RELEASE-M6.md)）。垂直切片、**合成标签生成器**（固定 seed 位级复现 + V1–V8 违规注入真值）、**全量文本解析**（参数卡全字段 + 逐字证据）、**全量双标尺规则引擎**（47 条规则挂官方原文、11 种检查类型、数值复算）、**内置评测基准**（`flcheck bench`，解析 F1=1.0 / 误报 0 / **15 个 seed 检出率全 1.0**）、**LLM 兜底适配器**（默认关闭，quote 逐字校验防幻觉）与**交付形态**（pipeline 状态机 / docx 审查报告 / Web 面板）均已真实可跑并经干净环境验证；条文块知识库（四部标准 428 块）已入库挂出处。规划中的能力见下文"特性"，**请勿将未标注"已实现"的内容当作可用功能**。
+> **项目状态：✅ v0.7.0 已公开发布**（[Release](https://github.com/yuluo554/food-label-compliance-checker/releases/tag/v0.7.0)，M0–M6 全量交付 + 二次迭代，发布门实录见 [plan/RELEASE-0.7.0.md](plan/RELEASE-0.7.0.md)（本轮）与 [plan/RELEASE-M6.md](plan/RELEASE-M6.md)（M6 建仓发布）。垂直切片、**合成标签生成器**（固定 seed 位级复现 + V1–V8 违规注入真值）、**全量文本解析**（参数卡全字段 + 逐字证据）、**全量双标尺规则引擎**（47 条规则挂官方原文、11 种检查类型、数值复算）、**内置评测基准**（`flcheck bench`，解析 F1=1.0 / 误报 0 / **15 个 seed 检出率全 1.0**）、**LLM 兜底适配器**（默认关闭，quote 逐字校验防幻觉）与**交付形态**（pipeline 状态机 / docx 审查报告 / Web 面板）均已真实可跑并经干净环境验证；条文块知识库（四部标准 428 块）已入库挂出处。规划中的能力见下文"特性"，**请勿将未标注"已实现"的内容当作可用功能**。
 
 ## 特性
 
@@ -25,7 +25,7 @@
 
 **已发布（M6 / v0.7.0）**
 
-- v0.7.0（2026-10-21）：二次迭代——跨 seed bench 守门（15 seed 检出率全 1.0）、Python floor 3.8→3.12 + PEP 639 元数据、CI {ubuntu,windows}×3.12 + actions v7、规则条数口径统一为 47 条、复核锚（`reviewed_at`/`next_review`）、版本号单一来源守门、`build/`+`dist/` 入 `.gitignore`
+- v0.7.0（2026-10-21）：二次迭代——跨 seed bench 守门（15 seed 检出率全 1.0）、Python floor 3.8→3.12 + PEP 639 元数据、CI {ubuntu,windows}×3.12 + actions v7、规则条数口径统一为 47 条、复核锚（`reviewed_at`/`next_review`）、版本号单一来源守门、`build/`+`dist/` 入 `.gitignore`；发布实录见 [plan/RELEASE-0.7.0.md](plan/RELEASE-0.7.0.md)
 - v0.6.0（2026-10-04）：脱敏四步复核+历史三扫全 0、干净环境验证（本地 clone+全新 venv 逐字跑通、收集数对照）、GitHub 建仓推送（SSH）+ tag + release + topics；发布实录见 [plan/RELEASE-M6.md](plan/RELEASE-M6.md)
 
 ## 架构

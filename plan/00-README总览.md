@@ -13,19 +13,20 @@
 | [03-架构与技术选型.md](03-架构与技术选型.md) | 分层架构、技术栈、依赖分层 extras 契约、目录结构 | ✅ 2026-10-04 |
 | [04-模块详设.md](04-模块详设.md) | 参数卡 schema、规则集 schema、数值复算引擎、双标尺、基准设计 | ✅ 2026-10-04 |
 | [05-数据计划与里程碑.md](05-数据计划与里程碑.md) | 数据四类目录、标准原文获取计划、生成器设计、M0–M6 DoD | ✅ 2026-10-04 |
-| [06-决策记录.md](06-决策记录.md) | 重大决策表（D01–D23，随里程碑滚动追加） | ✅ 持续更新 |
+| [06-决策记录.md](06-决策记录.md) | 重大决策表（D01–D25，随里程碑滚动追加） | ✅ 持续更新 |
 | [RELEASE-M6.md](RELEASE-M6.md) | M6 脱敏发布逐项留档（四步复核/三扫/干净环境验证/建仓推送/release/topics/发布后复核） | ✅ 2026-10-04 |
+| [RELEASE-0.7.0.md](RELEASE-0.7.0.md) | 二次迭代发布留档（D1–D12 处置对照/五批门禁与负控/发布件三方 sha256/CI 4 job/复现性口径/三个发布期坑） | ✅ 2026-10-21 |
 | HANDOFF-M1.md | 跨会话交接快照（M0 收尾，已过时仅作历史） | ✅ 2026-10-04 |
 | HANDOFF-M2.md | 跨会话交接快照（M1 收尾，已过时仅作历史） | ✅ 2026-10-04 |
 | HANDOFF-M3.md | 跨会话交接快照（M2 收尾，已过时仅作历史） | ✅ 2026-10-04 |
 | HANDOFF-M4.md | 跨会话交接快照（M3 收尾，已过时仅作历史） | ✅ 2026-10-04 |
 | HANDOFF-M5.md | 跨会话交接快照（M4 收尾，已过时仅作历史） | ✅ 2026-10-04 |
 | HANDOFF-M6.md | 跨会话交接快照（M5 收尾，已过时仅作历史） | ✅ 2026-10-04 |
-| HANDOFF-FINAL.md | 项目终态快照（M6 收尾 + 发布完成，无后续里程碑） | ✅ 2026-10-04 |
+| HANDOFF-FINAL.md | 项目终态快照（M6 收尾 + 发布完成；**2026-10-21 追加二次迭代 v0.7.0 段**） | ✅ 2026-10-21 |
 
 ## 决策记录
 
-权威决策表见 [06-决策记录.md](06-决策记录.md)（D01–D23）。要点：命名 D06（dist=仓库名/包 `food_label_checker`/CLI `flcheck`）、核心零依赖 D07、LLM 走 OpenAI 兼容默认关闭 D08、git 身份已切 noreply D11、发布走 SSH（token 无 workflow scope）D12、真值语义与 V→规则契约 D16、标准原文官方渠道入库与 nutrient_reference 升"已核对" D17、fixtures 冻结策略 D18、M2 解析层字段与值形态契约 D19、M3 知识与规则落地口径（能量系数 2011 无条款挂 2025 出处、日期格式/配料序/豁免的确定性近似）D20/D21、M5 交付形态（pipeline trace/报告 0 外链/extras 守门）D23。
+权威决策表见 [06-决策记录.md](06-决策记录.md)（D01–D25）。要点：命名 D06（dist=仓库名/包 `food_label_checker`/CLI `flcheck`）、核心零依赖 D07、LLM 走 OpenAI 兼容默认关闭 D08、git 身份已切 noreply D11、发布走 SSH（token 无 workflow scope）D12、真值语义与 V→规则契约 D16、标准原文官方渠道入库与 nutrient_reference 升"已核对" D17、fixtures 冻结策略 D18、M2 解析层字段与值形态契约 D19、M3 知识与规则落地口径（能量系数 2011 无条款挂 2025 出处、日期格式/配料序/豁免的确定性近似）D20/D21、M5 交付形态（pipeline trace/报告 0 外链/extras 守门）D23、**二次迭代 D24（V6 契约收口/floor 3.12+PEP 639/sdist 定性/四类自指守门）与 D25（tag 位置=代码提交，回写不进 tag 树）**。
 
 ## 里程碑（初稿→详设见 plan/05，含各里程碑 DoD）
 
@@ -36,3 +37,17 @@
 - **M4 基准与 LLM 兜底 ✅（2026-10-04）**：内置基准 `flcheck bench parse`（冻结集字段级 **F1=1.0**，TP=253/FP=0/FN=0，门槛 ≥0.95）与 `flcheck bench e2e`（**检出率 1.0（9/9）、误报 0**、dual_diff 零违例），评测器迁入 src（对账口径=D16 全部非 pass 集合，D21 等价迁移）；LLM 兜底适配器（默认关闭，quote⊆原文逐字校验+值从摘录重解析，不可达自动降级，25 项 mock 测试零真实 API）；M3 推迟项联动落地（D22）：2025 规则集 26 条共 47 条（+NUTR-ROWS-01 营养行完整性、+ALLERGEN-01 致敏物质提示，均挂条文块）、check_type 11 种、DATAGEN_VERSION 1→2 冻结集重生成；行在值不可析转"待人工确认"降级语义；pytest 159 项全绿
 - **M5 编排与交付 ✅（2026-10-04）**：pipeline 状态机（节点 load_input→parse→llm 兜底→run_ruleset×N→merge+diff→emit，每节点耗时+状态随 `pipeline.nodes` 返回，规则类失败降级为该规则集结果缺失+`warnings` 警告不吞异常）；docx 审查报告（七节结构、待人工确认独立成节、rels 零外链、LLM 参与标注，`check --report`）；Web 面板（FastAPI 零依赖内联单页、页面 0 外链断网可演示、docs/redoc 关闭、multipart 上传→完整 JSON，真实 uvicorn+urllib 上传冒烟实测）；CLI 收口（`check --format table`、`--report out.docx`、`flcheck web` 落地）；extras 守门测试（pyproject 可选依赖静态断言覆盖运行期+测试期 import，缺依赖优雅降级退出码 2，D23）；bench 复跑零回退（F1=1.0/误报 0）；pytest 189 项全绿
 - **M6 脱敏发布 + 收尾固化 ✅（2026-10-04）**：脱敏四步复核（106 跟踪文件清单核对/11 类模式内容级扫描/4 部 PDF sha256 对台账/filter-branch 全历史重写清 HANDOFF 个人路径）+ 提交元数据全 noreply + 历史终验三扫全 0（阳性对照前置，`tools/scan_sensitive.py` 入仓可复跑）+ 干净环境验证（本地 clone+全新 venv，README 逐字跑通，pytest 收集数对照一致、全量全绿、全链 demo 全 0）+ GitHub 建仓推送（SSH 一次成，D12）+ CI Windows cp1252 事件修复（strftime 中文格式串→fmt_cn_date + `test_platform_guard.py` 双守门，四矩阵绿）+ tag v0.6.0 + release + topics（逐项留档 [RELEASE-M6.md](RELEASE-M6.md)；D15 经用户确认不投赛事）
+
+## 二次迭代（v0.7.0，2026-10-21）✅ 已发布
+
+M6 发布后的第一次实质迭代，来源是一轮只读审计（12 条缺陷 D1–D12）+ 用户拍板的 4 个决策（[RELEASE-0.7.0.md](RELEASE-0.7.0.md) §0）：
+
+- **DEC-1=A**：`beverage-tea` 去掉 `"V6"` 支持声明 —— `bench e2e` 的检出率 1.0 此前只是冻结集 `seed=2026` 的抽样运气（15 个种子里 11 个掉到 0.875~0.9）。改后 **15/15 seed 检出率 1.0**，冻结集 14 文件**逐字节未变**
+- **DEC-2=A**：sdist 定性为「非交付物」，只发 wheel（此前"装了包但自带测试全红"未被披露）
+- **DEC-3=A**：`requires-python >=3.8` → **`>=3.12`** + PEP 639 元数据 + `setuptools>=77` + actions v7（`>=3.8` 已 EOL，最新 extras 集体要求 ≥3.10；且 PEP 639 与 3.8 硬不可兼得）
+- **文档口径**：5 处「45 条」统一为 21+26=**47 条**（历史 HANDOFF 只加括注）；`nutrient_reference.json` 的 `rounding` 增 `status_scope`/`open_item`/复核锚，收口 D6/D11 矛盾
+- **四类人工一致性变机判**：版本单一来源 / 跨 seed bench / 复核锚 / README 计数（四者均做了负控）
+- **验证**：pytest **191 → 198 项全绿**（dev + GitHub 全新 clone + CI 两腿三处一致）；脱敏四扫全 0；CI 2 job 全 success、Node20 弃用注解 0 条
+- **发布**：tag `v0.7.0`（= `e6e5896`，零滞后）+ Release 3 附件（whl 94,441 / tar.gz 122,151 / SHA256SUMS），**三方 sha256 逐字符一致**且下载件与本地构建件**逐字节相同**
+
+## 里程碑（初稿→详设见 plan/05，含各里程碑 DoD）
